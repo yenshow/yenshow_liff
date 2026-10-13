@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { buildPublicDocumentUrl, getProduct } from "@/api/products";
+import AppIcon from "@/components/AppIcon.vue";
 import { useLiff } from "@/composables/useLiff";
 import { fileNameFromUrl, localizedText, mediaUrl, productDocumentUrls } from "@/utils/format";
 
@@ -68,8 +69,17 @@ onMounted(() => {
 
 		<template v-if="product">
 			<section class="overflow-hidden rounded-2xl border border-ys-line bg-white shadow-sm">
-				<img v-if="imageUrl" :src="imageUrl" :alt="productName" class="h-48 w-full object-cover" />
+				<div class="flex h-52 items-center justify-center bg-ys-surface">
+					<img
+						v-if="imageUrl"
+						:src="imageUrl"
+						:alt="productName"
+						class="h-full w-full object-cover"
+					/>
+					<span v-else class="text-sm text-ys-muted">尚無產品圖片</span>
+				</div>
 				<div class="space-y-2 p-4">
+					<p class="text-xs font-medium uppercase tracking-wide text-ys-mid">產品型號</p>
 					<h1 class="text-xl font-semibold text-ys-deep">{{ product.code }}</h1>
 					<p class="text-ys-muted">{{ productName }}</p>
 					<p v-if="product.oemModel || product.originalModel" class="text-sm text-ys-muted">
@@ -84,19 +94,22 @@ onMounted(() => {
 					v-for="doc in documentUrls"
 					:key="doc"
 					type="button"
-					class="block w-full rounded-xl border border-ys-line bg-white px-4 py-3 text-left text-sm hover:border-ys-mid"
-					:aria-label="`下載 ${fileNameFromUrl(doc)}`"
+					class="flex w-full items-center justify-center gap-2 rounded-xl bg-ys-lime px-4 py-3 text-sm font-semibold text-ys-deep"
+					:aria-label="`下載 Datasheet ${fileNameFromUrl(doc)}`"
 					tabindex="0"
 					@click="handleDownload(doc)"
 				>
-					下載 {{ fileNameFromUrl(doc) }}
+					<AppIcon name="document" :size="18" />
+					<span>下載 Datasheet · {{ fileNameFromUrl(doc) }}</span>
 				</button>
-				<p v-if="!documentUrls.length" class="text-sm text-ys-muted">此產品尚無已上傳規格書</p>
+				<p v-if="!documentUrls.length" class="rounded-xl border border-dashed border-ys-line bg-white px-4 py-5 text-center text-sm text-ys-muted">
+					此產品尚無已上傳規格書
+				</p>
 			</section>
 
 			<button
 				type="button"
-				class="w-full rounded-xl bg-ys-lime px-4 py-3 font-semibold text-ys-deep"
+				class="w-full rounded-xl border border-ys-mid px-4 py-3 font-semibold text-ys-mid"
 				aria-label="詢問業務"
 				tabindex="0"
 				@click="handleAskSales"

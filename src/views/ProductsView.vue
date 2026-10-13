@@ -2,7 +2,7 @@
 import { onMounted, ref } from "vue";
 import { searchProducts } from "@/api/products";
 import EmptyState from "@/components/EmptyState.vue";
-import { localizedText } from "@/utils/format";
+import ProductTeaserCard from "@/components/ProductTeaserCard.vue";
 
 const query = ref("");
 const products = ref([]);
@@ -30,8 +30,8 @@ onMounted(() => {
 <template>
 	<div class="space-y-4">
 		<section>
-			<h1 class="text-xl font-semibold text-ys-deep">規格查詢</h1>
-			<p class="mt-1 text-sm text-ys-muted">搜尋產品並下載規格書。</p>
+			<h1 class="sr-only">規格查詢</h1>
+			<p class="text-sm text-ys-muted">搜尋產品並下載規格書。</p>
 		</section>
 
 		<form class="flex gap-2" @submit.prevent="handleSearch">
@@ -57,18 +57,7 @@ onMounted(() => {
 
 		<ul v-if="!loading && products.length" class="space-y-3" aria-label="產品搜尋結果">
 			<li v-for="product in products" :key="product._id">
-				<RouterLink
-					:to="`/products/${product._id}`"
-					class="flex items-center justify-between rounded-2xl border border-ys-line bg-white p-4 shadow-sm"
-					tabindex="0"
-					:aria-label="`查看 ${product.code}`"
-				>
-					<div>
-						<p class="font-semibold text-ys-deep">{{ product.code }}</p>
-						<p class="text-sm text-ys-muted">{{ localizedText(product.name, product.code) }}</p>
-					</div>
-					<span class="text-xl text-ys-mid" aria-hidden="true">›</span>
-				</RouterLink>
+				<ProductTeaserCard :product="product" />
 			</li>
 		</ul>
 

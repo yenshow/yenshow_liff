@@ -29,34 +29,38 @@ onMounted(() => {
 <template>
 	<div class="space-y-4">
 		<section>
-			<h1 class="text-xl font-semibold text-ys-deep">產品資訊</h1>
-			<p class="mt-1 text-sm text-ys-muted">最新消息、方案與活動。</p>
+			<h1 class="sr-only">產品資訊</h1>
+			<p class="text-sm text-ys-muted">最新消息、方案與活動。</p>
 		</section>
 
 		<p v-if="loading" class="text-sm text-ys-muted">載入中…</p>
 		<p v-if="error" class="text-sm text-red-600" role="alert">{{ error }}</p>
 
-		<ul v-if="!loading && items.length" class="space-y-3" aria-label="產品資訊列表">
+		<ul v-if="!loading && items.length" class="space-y-4" aria-label="產品資訊列表">
 			<li v-for="item in items" :key="item._id || item.slug">
 				<RouterLink
 					:to="`/info/${encodeURIComponent(item.slug)}`"
-					class="flex gap-3 overflow-hidden rounded-2xl border border-ys-line bg-white shadow-sm"
+					class="block overflow-hidden rounded-2xl border border-ys-line bg-white shadow-sm transition hover:border-ys-mid"
 					tabindex="0"
 					:aria-label="localizedText(item.title, '未命名')"
 				>
-					<img
-						v-if="mediaUrl(item.coverImageUrl || item.coverImage)"
-						:src="mediaUrl(item.coverImageUrl || item.coverImage)"
-						:alt="localizedText(item.title)"
-						class="h-24 w-24 shrink-0 object-cover"
-					/>
-					<div class="min-w-0 flex-1 p-3">
-						<p class="truncate font-semibold text-ys-deep">
+					<div class="flex h-40 items-center justify-center bg-ys-surface">
+						<img
+							v-if="mediaUrl(item.coverImageUrl || item.coverImage)"
+							:src="mediaUrl(item.coverImageUrl || item.coverImage)"
+							:alt="localizedText(item.title)"
+							class="h-full w-full object-cover"
+						/>
+						<span v-else class="text-sm text-ys-muted">產品資訊</span>
+					</div>
+					<div class="space-y-2 p-4">
+						<p class="font-semibold text-ys-deep">
 							{{ localizedText(item.title, "未命名") }}
 						</p>
-						<p class="mt-1 line-clamp-2 text-sm text-ys-muted">
+						<p class="line-clamp-2 text-sm leading-relaxed text-ys-muted">
 							{{ localizedText(item.summary) }}
 						</p>
+						<span class="inline-flex text-sm font-medium text-ys-mid">閱讀更多 ›</span>
 					</div>
 				</RouterLink>
 			</li>

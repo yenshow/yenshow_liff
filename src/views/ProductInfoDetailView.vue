@@ -46,14 +46,19 @@ onMounted(() => {
 		<p v-if="error" class="text-sm text-red-600" role="alert">{{ error }}</p>
 
 		<article v-if="item" class="overflow-hidden rounded-2xl border border-ys-line bg-white shadow-sm">
-			<img v-if="cover" :src="cover" :alt="title" class="h-48 w-full object-cover" />
-			<div class="space-y-3 p-4">
-				<h1 class="text-xl font-semibold text-ys-deep">{{ title }}</h1>
-				<p v-if="summary" class="text-sm text-ys-muted">{{ summary }}</p>
+			<div v-if="cover" class="h-52 bg-ys-surface">
+				<img :src="cover" :alt="title" class="h-full w-full object-cover" />
+			</div>
+			<div class="space-y-4 p-4">
+				<div>
+					<p class="text-xs font-medium text-ys-mid">產品資訊</p>
+					<h1 class="mt-1 text-xl font-semibold text-ys-deep">{{ title }}</h1>
+				</div>
+				<p v-if="summary" class="text-sm leading-relaxed text-ys-muted">{{ summary }}</p>
 				<p class="whitespace-pre-wrap text-sm leading-relaxed text-ys-text">{{ bodyText }}</p>
 				<RouterLink
 					to="/products"
-					class="inline-flex rounded-xl bg-ys-lime px-4 py-2 text-sm font-semibold text-ys-deep"
+					class="flex w-full items-center justify-center rounded-xl bg-ys-lime px-4 py-3 text-sm font-semibold text-ys-deep"
 					tabindex="0"
 					aria-label="前往規格查詢"
 				>
