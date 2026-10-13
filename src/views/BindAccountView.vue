@@ -1,0 +1,89 @@
+﻿<script setup>
+import { ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useAuth } from "@/composables/useAuth";
+
+const route = useRoute();
+const router = useRouter();
+const { bindWithOrder, bound, companyName } = useAuth();
+
+const orderNo = ref("");
+const taxId = ref("");
+const loading = ref(false);
+const error = ref("");
+
+const handleSubmit = async () => {
+	loading.value = true;
+	error.value = "";
+	try {
+		await bindWithOrder({
+			orderNo: orderNo.value.trim(),
+			taxId: taxId.value.trim()
+		});
+		const redirect = typeof route.query.redirect === "string" ? route.query.redirect : "/";
+		await router.replace(redirect || "/");
+	} catch (err) {
+		error.value = err?.response?.data?.message || err?.message || "綁定失敗";
+	} finally {
+		loading.value = false;
+	}
+};
+</script>
+
+<template>
+	<div class="space-y-4">
+		<section>
+			<h1 class="text-xl font-semibold text-ys-deep">帳號綁定</h1>
+			<p class="mt-1 text-sm text-ys-muted">
+				請輸入貴公司訂單編號與統一編號，完成 LINE 與客戶資料對應。
+			</p>
+		</section>
+
+		<div
+			v-if="bound"
+			class="rounded-xl border border-ys-line bg-white p-4 text-sm text-ys-mid"
+		>
+			目前已綁定：{{ companyName || "客戶" }}。若需更換，請重新驗證後覆蓋。
+		</div>
+
+		<form
+			class="space-y-3 rounded-2xl border border-ys-line bg-white p-4 shadow-sm"
+			@submit.prevent="handleSubmit"
+		>
+			<label class="block">
+				<span class="mb-1 block text-sm font-medium">訂單編號</span>
+				<input
+					v-model="orderNo"
+					type="text"
+					required
+					placeholder="例如 PO26002116"
+					class="w-full rounded-xl border border-ys-line px-3 py-2.5"
+					aria-label="訂單編號"
+				/>
+			</label>
+			<label class="block">
+				<span class="mb-1 block text-sm font-medium">統一編號</span>
+				<input
+					v-model="taxId"
+					type="text"
+					required
+					inputmode="numeric"
+					placeholder="例如 03028349"
+					class="w-full rounded-xl border border-ys-line px-3 py-2.5"
+					aria-label="統一編號"
+				/>
+			</label>
+			<p v-if="error" class="text-sm text-red-600" role="alert">{{ error }}</p>
+			<button
+				type="submit"
+				class="w-full rounded-xl bg-ys-lime px-4 py-3 font-semibold text-ys-deep disabled:opacity-60"
+				:disabled="loading"
+				aria-label="確認綁定"
+			>
+				{{ loading ? "驗證中…" : "確認綁定" }}
+			</button>
+		</form>
+
+		<p class="text-xs text-ys-muted">測試樣本（mock）：PO26002116 ／ 03028349</p>
+	</div>
+</template>

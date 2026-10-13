@@ -40,5 +40,25 @@ export const useLiff = () => {
 		}
 	};
 
-	return { ensureInit, getProfile };
+	const getIdToken = async () => {
+		const instance = await ensureInit();
+		if (!instance) return null;
+		try {
+			return instance.getIDToken?.() || null;
+		} catch {
+			return null;
+		}
+	};
+
+	const openExternal = (url) => {
+		const href = String(url || "");
+		if (!href) return;
+		if (liffModule?.isInClient?.()) {
+			liffModule.openWindow({ url: href, external: true });
+			return;
+		}
+		window.open(href, "_blank", "noopener,noreferrer");
+	};
+
+	return { ensureInit, getProfile, getIdToken, openExternal };
 };
