@@ -58,5 +58,18 @@ defineProps({
 			<path d="M11 16h4" />
 			<path d="M11 8h1" />
 		</template>
+		<template v-else-if="name === 'bell'">
+			<path d="M6 9a6 6 0 1 1 12 0c0 3.5 1.5 5 1.5 5H4.5S6 12.5 6 9Z" />
+			<path d="M10 19a2 2 0 0 0 4 0" />
+		</template>
+		<template v-else-if="name === 'settings'">
+			<circle cx="12" cy="12" r="3" />
+			<path
+				d="M12 3.5v2M12 18.5v2M4.9 6.5l1.4 1.4M17.7 16.1l1.4 1.4M3.5 12h2M18.5 12h2M4.9 17.5l1.4-1.4M17.7 7.9l1.4-1.4"
+			/>
+		</template>
+		<template v-else-if="name === 'chevron'">
+			<path d="M9 6l6 6-6 6" />
+		</template>
 	</svg>
 </template>

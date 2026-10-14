@@ -4,8 +4,7 @@ import AppIcon from "@/components/AppIcon.vue";
 import { localizedText, mediaUrl } from "@/utils/format";
 
 const props = defineProps({
-	product: { type: Object, required: true },
-	showCta: { type: Boolean, default: true }
+	product: { type: Object, required: true }
 });
 
 const name = computed(() => localizedText(props.product?.name, props.product?.code || ""));
@@ -17,11 +16,10 @@ const imageUrl = computed(() =>
 <template>
 	<RouterLink
 		:to="`/products/${product._id}`"
-		class="block overflow-hidden rounded-2xl border border-ys-line bg-white shadow-sm transition hover:border-ys-mid"
-		tabindex="0"
+		class="block overflow-hidden rounded-2xl border border-ys-line bg-white p-3 shadow-sm transition hover:border-ys-mid"
 		:aria-label="`查看 ${product.code} 規格`"
 	>
-		<div class="flex gap-3 p-3">
+		<div class="flex gap-3">
 			<div
 				class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-ys-surface"
 			>
@@ -39,11 +37,10 @@ const imageUrl = computed(() =>
 			</div>
 		</div>
 		<div
-			v-if="showCta"
-			class="flex items-center justify-center gap-2 border-t border-ys-line px-3 py-2.5 text-sm font-semibold text-ys-mid"
+			class="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-ys-lime px-3 py-2.5 text-sm font-semibold text-ys-deep"
 		>
 			<AppIcon name="document" :size="16" />
-			<span>查看規格／下載 Datasheet</span>
+			<span>查看規格 / 下載 Datasheet</span>
 		</div>
 	</RouterLink>
 </template>

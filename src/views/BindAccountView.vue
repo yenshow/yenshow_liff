@@ -23,7 +23,13 @@ const handleSubmit = async () => {
 		const redirect = typeof route.query.redirect === "string" ? route.query.redirect : "/";
 		await router.replace(redirect || "/");
 	} catch (err) {
-		error.value = err?.response?.data?.message || err?.message || "綁定失敗";
+		const status = err?.response?.status;
+		const apiMessage = err?.response?.data?.message || err?.message;
+		if (status === 409) {
+			error.value = apiMessage || "同一客戶有多筆符合訂單，請改輸入完整內部單號";
+		} else {
+			error.value = apiMessage || "綁定失敗";
+		}
 	} finally {
 		loading.value = false;
 	}

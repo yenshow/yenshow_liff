@@ -34,17 +34,17 @@ onMounted(() => {
 			<p class="text-sm text-ys-muted">搜尋產品並下載規格書。</p>
 		</section>
 
-		<form class="flex gap-2" @submit.prevent="handleSearch">
+		<form class="flex w-full min-w-0 items-stretch gap-2" @submit.prevent="handleSearch">
 			<input
 				v-model="query"
 				type="search"
 				placeholder="例如 YS-AC-08"
-				class="flex-1 rounded-xl border border-ys-line bg-white px-3 py-2.5"
+				class="min-w-0 flex-1 rounded-xl border border-ys-line bg-white px-3 py-2.5"
 				aria-label="搜尋產品"
 			/>
 			<button
 				type="submit"
-				class="rounded-xl bg-ys-lime px-4 py-2.5 font-semibold text-ys-deep disabled:opacity-60"
+				class="shrink-0 rounded-xl bg-ys-lime px-3 py-2.5 text-sm font-semibold text-ys-deep disabled:opacity-60 sm:px-4"
 				:disabled="loading"
 				aria-label="搜尋"
 			>

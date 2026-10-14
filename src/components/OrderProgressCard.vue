@@ -29,7 +29,6 @@ const progressLabel = computed(() => {
 	<RouterLink
 		:to="`/orders/${encodeURIComponent(order.id)}`"
 		class="block rounded-2xl border border-ys-line bg-white p-4 shadow-sm transition hover:border-ys-mid"
-		tabindex="0"
 		:aria-label="`查看訂單 ${title}`"
 	>
 		<div class="flex items-start justify-between gap-3">

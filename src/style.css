@@ -22,4 +22,10 @@ body {
 
 #app {
 	min-height: 100vh;
+	overflow-x: hidden;
+}
+
+/* 避免 search input 預設 min-width 撐破小螢幕 flex 列 */
+input[type="search"] {
+	min-width: 0;
 }
