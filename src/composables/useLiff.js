@@ -100,12 +100,16 @@ export const useLiff = () => {
 		window.open(href, "_blank", "noopener,noreferrer");
 	};
 
-	/** 開啟規格書／PDF：LINE 內用 in-app browser 預覽，勿強制另存下載 */
+	/**
+	 * 開啟規格書／PDF。
+	 * 必須 external: true：PDF 在 API 網域（與 LIFF endpoint 不同），
+	 * LINE 內建瀏覽器無法可靠導向跨網域 /storage，會看起來像「沒跳轉」。
+	 */
 	const openDocument = (url) => {
 		const href = String(url || "");
 		if (!href) return;
 		if (liffModule?.isInClient?.()) {
-			liffModule.openWindow({ url: href, external: false });
+			liffModule.openWindow({ url: href, external: true });
 			return;
 		}
 		window.open(href, "_blank", "noopener,noreferrer");
