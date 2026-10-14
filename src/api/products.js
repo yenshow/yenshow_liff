@@ -28,11 +28,39 @@ export const getProduct = async (id) => {
 	return Array.isArray(product) ? product[0] : product;
 };
 
+const normalizeDocumentUrl = (documentUrl) => {
+	let url = String(documentUrl || "").trim();
+	for (let i = 0; i < 5; i++) {
+		try {
+			const next = decodeURIComponent(url.replace(/\+/g, "%20"));
+			if (next === url) break;
+			url = next;
+		} catch {
+			break;
+		}
+	}
+	if (/^https?:\/\//i.test(url)) {
+		try {
+			url = new URL(url).pathname;
+		} catch {
+			/* keep */
+		}
+	}
+	if (!url.startsWith("/")) url = `/${url}`;
+	return url;
+};
+
+const encodeStoragePath = (storagePath) =>
+	String(storagePath || "")
+		.split("/")
+		.map((segment) => encodeURIComponent(segment))
+		.join("/");
+
 export const buildPublicDocumentUrl = async ({ productId, documentUrl }) => {
 	const { data } = await publicHttp.get("/api/documents/specifications/public-url", {
-		params: { productId, documentUrl }
+		params: { productId, documentUrl: normalizeDocumentUrl(documentUrl) }
 	});
 	const { storagePath, token } = unwrapResult(data) || {};
 	if (!storagePath || !token) throw new Error("無法取得開啟連結");
-	return resolveApiUrl(`/storage/${storagePath}?dl=${encodeURIComponent(token)}`);
+	return resolveApiUrl(`/storage/${encodeStoragePath(storagePath)}?dl=${encodeURIComponent(token)}`);
 };
