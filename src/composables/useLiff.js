@@ -91,35 +91,6 @@ export const useLiff = () => {
 	};
 
 	/**
-	 * 開啟外部網址（規格書 PDF 等）。
-	 * LINE 內必須 external: true（跨 API 網域）；window.open 失敗時改用 <a> 備援。
-	 */
-	const openExternal = (url) => {
-		const href = String(url || "");
-		if (!href) return;
-
-		if (liffModule?.isInClient?.()) {
-			try {
-				liffModule.openWindow({ url: href, external: true });
-				return;
-			} catch {
-				// fall through
-			}
-		}
-
-		const opened = window.open(href, "_blank", "noopener,noreferrer");
-		if (opened) return;
-
-		const anchor = document.createElement("a");
-		anchor.href = href;
-		anchor.target = "_blank";
-		anchor.rel = "noopener noreferrer";
-		document.body.appendChild(anchor);
-		anchor.click();
-		anchor.remove();
-	};
-
-	/**
 	 * 詢問業務：優先在 LINE App 內傳訊息給 OA，再關閉 LIFF 回到聊天室；
 	 * 否則開啟 line.me 預填訊息（需設定 VITE_LINE_OA_ID）。
 	 */
@@ -154,5 +125,5 @@ export const useLiff = () => {
 		throw new Error("請從 LINE 官方帳號開啟此頁，或設定 VITE_LINE_OA_ID 後再試");
 	};
 
-	return { ensureInit, getProfile, getIdToken, openExternal, askSalesViaLine };
+	return { ensureInit, getProfile, getIdToken, askSalesViaLine };
 };

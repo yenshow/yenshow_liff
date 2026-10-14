@@ -1,13 +1,14 @@
 ﻿<script setup>
 import { computed, onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
-import { buildPublicDocumentUrl, getProduct } from "@/api/products";
+import { useRoute, useRouter } from "vue-router";
+import { getProduct } from "@/api/products";
 import AppIcon from "@/components/AppIcon.vue";
 import { useLiff } from "@/composables/useLiff";
 import { localizedText, mediaUrl, productSpecDocuments } from "@/utils/format";
 
 const route = useRoute();
-const { openExternal, askSalesViaLine } = useLiff();
+const router = useRouter();
+const { askSalesViaLine } = useLiff();
 
 const product = ref(null);
 const loading = ref(false);
@@ -33,19 +34,17 @@ const handleLoad = async () => {
 	}
 };
 
-const handleOpenSpec = async (documentUrl) => {
+const handleOpenSpec = (documentUrl) => {
 	error.value = "";
 	const productId = product.value?._id || product.value?.id;
 	if (!productId || !documentUrl) {
 		error.value = "無法開啟規格書";
 		return;
 	}
-	try {
-		const url = await buildPublicDocumentUrl({ productId, documentUrl });
-		openExternal(url);
-	} catch (err) {
-		error.value = err?.response?.data?.message || err?.message || "無法開啟規格書";
-	}
+	router.push({
+		name: "spec-document",
+		query: { productId: String(productId), documentUrl: String(documentUrl) }
+	});
 };
 
 const handleAskSales = async () => {

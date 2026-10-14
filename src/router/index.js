@@ -36,6 +36,12 @@ const router = createRouter({
 			component: () => import("@/views/ProductDetailView.vue")
 		},
 		{
+			path: "/documents/open",
+			name: "spec-document",
+			meta: { title: "開啟規格書" },
+			component: () => import("@/views/SpecDocumentOpenView.vue")
+		},
+		{
 			path: "/info",
 			name: "info",
 			meta: { title: "產品資訊", keepAlive: true },

@@ -56,6 +56,7 @@ const encodeStoragePath = (storagePath) =>
 		.map((segment) => encodeURIComponent(segment))
 		.join("/");
 
+/** 活躍產品免登入換證；僅供 LIFF 開啟頁使用 */
 export const buildPublicDocumentUrl = async ({ productId, documentUrl }) => {
 	const { data } = await publicHttp.get("/api/documents/specifications/public-url", {
 		params: { productId, documentUrl: normalizeDocumentUrl(documentUrl) }
