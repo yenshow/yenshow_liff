@@ -1,7 +1,10 @@
 ﻿<script setup>
+defineOptions({ name: "OrdersView" });
+
 import { onMounted, ref } from "vue";
 import { listOrders } from "@/api/hub";
 import EmptyState from "@/components/EmptyState.vue";
+import ListSkeleton from "@/components/ListSkeleton.vue";
 import StatusBadge from "@/components/StatusBadge.vue";
 
 const orders = ref([]);
@@ -9,22 +12,19 @@ const loading = ref(false);
 const error = ref("");
 
 const handleLoad = async () => {
-	loading.value = true;
+	if (!orders.value.length) loading.value = true;
 	error.value = "";
 	try {
 		const data = await listOrders({ limit: 50 });
 		orders.value = data?.orders || [];
 	} catch (err) {
 		error.value = err?.response?.data?.message || err?.message || "無法載入訂單";
-		orders.value = [];
 	} finally {
 		loading.value = false;
 	}
 };
 
-onMounted(() => {
-	handleLoad();
-});
+onMounted(handleLoad);
 </script>
 
 <template>
@@ -34,7 +34,7 @@ onMounted(() => {
 			<p class="mt-1 text-sm text-ys-muted">查看與您相關的訂單與交貨進度。</p>
 		</section>
 
-		<p v-if="loading" class="text-sm text-ys-muted">載入中…</p>
+		<ListSkeleton v-if="loading" :count="4" variant="row" />
 		<p v-if="error" class="text-sm text-red-600" role="alert">{{ error }}</p>
 
 		<ul v-if="!loading && orders.length" class="space-y-3" aria-label="訂單列表">

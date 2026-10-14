@@ -1,8 +1,10 @@
 import { computed, ref } from "vue";
 import { getHubMe, verifyOrderBind } from "@/api/hub";
 import { useLiff } from "@/composables/useLiff";
+import { cacheInvalidate } from "@/utils/apiCache";
 
 const booting = ref(true);
+const booted = ref(false);
 const bound = ref(false);
 const customer = ref(null);
 const lineProfile = ref(null);
@@ -33,14 +35,19 @@ export const useAuth = () => {
 		}
 	};
 
-	const boot = async () => {
+	const boot = async ({ force = false } = {}) => {
+		if (!force && booted.value) return { redirectedToLogin: false };
 		if (bootPromise) return bootPromise;
+
+		if (force) cacheInvalidate("hub:me");
+
 		bootPromise = (async () => {
 			booting.value = true;
 			authError.value = "";
 			try {
 				const instance = await ensureInit();
 				if (!instance) return { redirectedToLogin: true };
+
 				lineProfile.value = await getProfile();
 				try {
 					await refreshMe();
@@ -48,15 +55,18 @@ export const useAuth = () => {
 					applyMe({ bound: false, customer: null });
 					console.warn("Hub /me 失敗:", err?.message || err);
 				}
+				booted.value = true;
 				return { redirectedToLogin: false };
 			} catch (err) {
 				authError.value = err?.response?.data?.message || err?.message || "載入失敗";
+				booted.value = false;
 				throw err;
 			} finally {
 				booting.value = false;
 				bootPromise = null;
 			}
 		})();
+
 		return bootPromise;
 	};
 
@@ -68,6 +78,7 @@ export const useAuth = () => {
 
 	return {
 		booting,
+		booted,
 		bound,
 		customer,
 		companyName,

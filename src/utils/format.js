@@ -1,17 +1,9 @@
-import { apiBase } from "@/api/http";
+export { resolveApiUrl as mediaUrl } from "@/api/http";
 
 export const localizedText = (value, fallback = "") => {
 	if (!value) return fallback;
 	if (typeof value === "string") return value;
 	return value.TW || value.EN || fallback;
-};
-
-export const mediaUrl = (path) => {
-	if (!path) return "";
-	const raw = String(path);
-	if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
-	const base = apiBase();
-	return `${base}${raw.startsWith("/") ? raw : `/${raw}`}`;
 };
 
 /** 規格書按鈕：依語系標示，不暴露原檔名 */

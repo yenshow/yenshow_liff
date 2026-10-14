@@ -1,8 +1,11 @@
 ﻿<script setup>
+defineOptions({ name: "ServiceListView" });
+
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { listServiceTickets } from "@/api/hub";
 import EmptyState from "@/components/EmptyState.vue";
+import ListSkeleton from "@/components/ListSkeleton.vue";
 import StatusBadge from "@/components/StatusBadge.vue";
 
 const router = useRouter();
@@ -11,14 +14,13 @@ const loading = ref(false);
 const error = ref("");
 
 const handleLoad = async () => {
-	loading.value = true;
+	if (!tickets.value.length) loading.value = true;
 	error.value = "";
 	try {
 		const data = await listServiceTickets({ limit: 50 });
 		tickets.value = data?.tickets || [];
 	} catch (err) {
 		error.value = err?.response?.data?.message || err?.message || "無法載入案件";
-		tickets.value = [];
 	} finally {
 		loading.value = false;
 	}
@@ -28,9 +30,7 @@ const handleCreate = () => {
 	router.push("/service/new");
 };
 
-onMounted(() => {
-	handleLoad();
-});
+onMounted(handleLoad);
 </script>
 
 <template>
@@ -51,7 +51,7 @@ onMounted(() => {
 			</button>
 		</section>
 
-		<p v-if="loading" class="text-sm text-ys-muted">載入中…</p>
+		<ListSkeleton v-if="loading" :count="4" variant="row" />
 		<p v-if="error" class="text-sm text-red-600" role="alert">{{ error }}</p>
 
 		<ul v-if="!loading && tickets.length" class="space-y-3" aria-label="售後案件列表">

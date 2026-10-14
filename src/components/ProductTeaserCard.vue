@@ -40,7 +40,7 @@ const imageUrl = computed(() =>
 				class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-ys-mid px-2 py-2 text-xs font-semibold text-ys-mid"
 			>
 				<AppIcon name="document" :size="14" />
-				<span class="truncate">查看規格 / 下載 Datasheet</span>
+				<span class="truncate">查看規格 / 開啟規格書</span>
 			</span>
 		</div>
 	</RouterLink>

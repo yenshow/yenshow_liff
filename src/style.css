@@ -49,3 +49,13 @@ body::-webkit-scrollbar {
 input[type="search"] {
 	min-width: 0;
 }
+
+.page-fade-enter-active,
+.page-fade-leave-active {
+	transition: opacity 150ms ease;
+}
+
+.page-fade-enter-from,
+.page-fade-leave-to {
+	opacity: 0;
+}

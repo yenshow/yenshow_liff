@@ -1,7 +1,10 @@
 ﻿<script setup>
+defineOptions({ name: "ProductsView" });
+
 import { onMounted, ref } from "vue";
 import { searchProducts } from "@/api/products";
 import EmptyState from "@/components/EmptyState.vue";
+import ListSkeleton from "@/components/ListSkeleton.vue";
 import ProductTeaserCard from "@/components/ProductTeaserCard.vue";
 
 const query = ref("");
@@ -9,22 +12,21 @@ const products = ref([]);
 const loading = ref(false);
 const error = ref("");
 
-const handleSearch = async () => {
-	loading.value = true;
+const handleSearch = async (silent = false) => {
+	// 勿把 submit Event 當成 silent；僅明確 true 才安靜更新
+	const quiet = silent === true;
+	if (!quiet || !products.value.length) loading.value = true;
 	error.value = "";
 	try {
 		products.value = await searchProducts(query.value.trim());
 	} catch (err) {
 		error.value = err?.response?.data?.message || err?.message || "搜尋失敗";
-		products.value = [];
 	} finally {
 		loading.value = false;
 	}
 };
 
-onMounted(() => {
-	handleSearch();
-});
+onMounted(() => handleSearch(true));
 </script>
 
 <template>
@@ -34,7 +36,7 @@ onMounted(() => {
 			<p class="mt-1 text-sm text-ys-muted">以產品型號搜尋規格書與技術文件。</p>
 		</section>
 
-		<form class="flex w-full min-w-0 items-stretch gap-2" @submit.prevent="handleSearch">
+		<form class="flex w-full min-w-0 items-stretch gap-2" @submit.prevent="handleSearch()">
 			<input
 				v-model="query"
 				type="search"
@@ -52,7 +54,7 @@ onMounted(() => {
 			</button>
 		</form>
 
-		<p v-if="loading" class="text-sm text-ys-muted">搜尋中…</p>
+		<ListSkeleton v-if="loading" :count="3" variant="card" />
 		<p v-if="error" class="text-sm text-red-600" role="alert">{{ error }}</p>
 
 		<ul v-if="!loading && products.length" class="space-y-3" aria-label="產品搜尋結果">

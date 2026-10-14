@@ -1,15 +1,20 @@
 ﻿<script setup>
+defineOptions({ name: "ProductInfoView" });
+
 import { onMounted, ref } from "vue";
 import { listNews } from "@/api/news";
 import EmptyState from "@/components/EmptyState.vue";
+import ListSkeleton from "@/components/ListSkeleton.vue";
 import { localizedText, mediaUrl } from "@/utils/format";
 
 const items = ref([]);
 const loading = ref(false);
 const error = ref("");
 
+const coverUrl = (item) => mediaUrl(item?.coverImageUrl || item?.coverImage);
+
 const handleLoad = async () => {
-	loading.value = true;
+	if (!items.value.length) loading.value = true;
 	error.value = "";
 	try {
 		const list = await listNews({
@@ -18,7 +23,6 @@ const handleLoad = async () => {
 			sort: "createdAt",
 			sortDirection: "desc"
 		});
-		// 確保前端顯示為最新在前（createdAt desc）
 		items.value = [...(list || [])].sort((a, b) => {
 			const ta = new Date(a?.createdAt || a?.publishDate || 0).getTime();
 			const tb = new Date(b?.createdAt || b?.publishDate || 0).getTime();
@@ -26,15 +30,12 @@ const handleLoad = async () => {
 		});
 	} catch (err) {
 		error.value = err?.response?.data?.message || err?.message || "無法載入產品資訊";
-		items.value = [];
 	} finally {
 		loading.value = false;
 	}
 };
 
-onMounted(() => {
-	handleLoad();
-});
+onMounted(handleLoad);
 </script>
 
 <template>
@@ -44,7 +45,7 @@ onMounted(() => {
 			<p class="mt-1 text-sm text-ys-muted">最新產品、方案與活動資訊。</p>
 		</section>
 
-		<p v-if="loading" class="text-sm text-ys-muted">載入中…</p>
+		<ListSkeleton v-if="loading" :count="3" variant="media" />
 		<p v-if="error" class="text-sm text-red-600" role="alert">{{ error }}</p>
 
 		<ul v-if="!loading && items.length" class="space-y-4" aria-label="產品資訊列表">
@@ -57,8 +58,8 @@ onMounted(() => {
 				>
 					<div class="flex h-40 items-center justify-center bg-ys-surface">
 						<img
-							v-if="mediaUrl(item.coverImageUrl || item.coverImage)"
-							:src="mediaUrl(item.coverImageUrl || item.coverImage)"
+							v-if="coverUrl(item)"
+							:src="coverUrl(item)"
 							:alt="localizedText(item.title)"
 							class="h-full w-full object-cover"
 						/>

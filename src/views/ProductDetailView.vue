@@ -7,12 +7,11 @@ import { useLiff } from "@/composables/useLiff";
 import { localizedText, mediaUrl, productSpecDocuments } from "@/utils/format";
 
 const route = useRoute();
-const { openExternal, askSalesViaLine } = useLiff();
+const { openDocument, askSalesViaLine } = useLiff();
 
 const product = ref(null);
 const loading = ref(false);
 const error = ref("");
-const downloadMessage = ref("");
 const salesMessage = ref("");
 const salesLoading = ref(false);
 
@@ -34,18 +33,18 @@ const handleLoad = async () => {
 	}
 };
 
-const handleDownload = async (documentUrl) => {
-	downloadMessage.value = "";
+const handleOpenSpec = async (documentUrl) => {
 	error.value = "";
+	const productId = product.value?._id || product.value?.id;
+	if (!productId || !documentUrl) {
+		error.value = "無法開啟規格書";
+		return;
+	}
 	try {
-		const url = await buildPublicDocumentUrl({
-			productId: product.value._id,
-			documentUrl
-		});
-		openExternal(url);
-		downloadMessage.value = "已開啟下載連結";
+		const url = await buildPublicDocumentUrl({ productId, documentUrl });
+		openDocument(url);
 	} catch (err) {
-		error.value = err?.response?.data?.message || err?.message || "無法取得下載連結";
+		error.value = err?.response?.data?.message || err?.message || "無法開啟規格書";
 	}
 };
 
@@ -90,7 +89,6 @@ onMounted(() => {
 
 		<p v-if="loading" class="text-sm text-ys-muted">載入中…</p>
 		<p v-if="error" class="text-sm text-red-600" role="alert">{{ error }}</p>
-		<p v-if="downloadMessage" class="text-sm text-emerald-700">{{ downloadMessage }}</p>
 		<p v-if="salesMessage" class="text-sm text-emerald-700">{{ salesMessage }}</p>
 
 		<template v-if="product">
@@ -115,10 +113,10 @@ onMounted(() => {
 						v-for="doc in specDocuments"
 						:key="`${doc.lang}-${doc.url}`"
 						type="button"
-						class="flex w-full items-center justify-between gap-3 rounded-xl border border-ys-mid bg-white px-4 py-3.5 text-left"
-						:aria-label="`下載${doc.label}`"
+						class="flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-ys-mid bg-white px-4 py-3.5 text-left"
+						:aria-label="`開啟${doc.label}`"
 						tabindex="0"
-						@click="handleDownload(doc.url)"
+						@click="handleOpenSpec(doc.url)"
 					>
 						<span class="inline-flex min-w-0 items-center gap-2.5 font-semibold text-ys-deep">
 							<span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-ys-lime text-ys-mid">
@@ -126,7 +124,7 @@ onMounted(() => {
 							</span>
 							<span>{{ doc.label }}</span>
 						</span>
-						<span class="shrink-0 text-sm font-medium text-ys-mid">下載 ›</span>
+						<span class="shrink-0 text-sm font-medium text-ys-mid">開啟 ›</span>
 					</button>
 				</div>
 				<p v-else class="rounded-xl border border-dashed border-ys-line bg-white px-4 py-5 text-center text-sm text-ys-muted">此產品尚無已上傳規格書</p>
@@ -134,7 +132,7 @@ onMounted(() => {
 
 			<button
 				type="button"
-				class="flex w-full items-center justify-center gap-2 rounded-xl bg-ys-mid px-4 py-3.5 font-semibold text-white disabled:opacity-60"
+				class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ys-mid px-4 py-3.5 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
 				aria-label="詢問業務"
 				tabindex="0"
 				:disabled="salesLoading"

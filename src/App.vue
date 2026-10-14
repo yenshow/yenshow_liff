@@ -5,6 +5,9 @@ import AppIcon from "@/components/AppIcon.vue";
 import BottomTabBar from "@/components/BottomTabBar.vue";
 import { useAuth } from "@/composables/useAuth";
 
+/** 與各 tab 根頁 defineOptions.name 對應 */
+const TAB_KEEP_ALIVE = ["HomeView", "OrdersView", "ServiceListView", "ProductInfoView", "ProductsView"];
+
 const route = useRoute();
 const { lineProfile, companyName, bound } = useAuth();
 
@@ -68,10 +71,17 @@ const handleNotifyClick = () => {
 		<!-- 非首頁保留頂部綠色邊，與首頁內容區塊銜接方式一致 -->
 		<div v-else class="shrink-0 pt-3" aria-hidden="true" />
 
-		<main
-			class="mx-auto w-full max-w-lg flex-1 rounded-t-3xl bg-ys-surface px-4 pt-6 pb-24"
-		>
-			<RouterView />
+		<main class="mx-auto w-full max-w-lg flex-1 rounded-t-3xl bg-ys-surface px-4 pt-6 pb-24">
+			<RouterView v-slot="{ Component, route: viewRoute }">
+				<Transition name="page-fade" mode="out-in">
+					<KeepAlive :include="TAB_KEEP_ALIVE">
+						<component
+							:is="Component"
+							:key="viewRoute.meta.keepAlive ? viewRoute.name : viewRoute.fullPath"
+						/>
+					</KeepAlive>
+				</Transition>
+			</RouterView>
 		</main>
 
 		<BottomTabBar />

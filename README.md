@@ -14,7 +14,7 @@ VITE_LINE_OA_ID=your_oa_basic_id
 
 - `VITE_SKIP_LIFF_LOGIN=true` — 不走 LINE OAuth（避免 localhost redirect 400）
 - `VITE_MOCK_LINE_USER_ID=U_local_dev_user` — 以 header 模擬 LINE 使用者
-- `VITE_API_BASE_URL=http://localhost:4001` — 打本機 Hub（勿打正式站跳過驗證）
+- `VITE_API_BASE_URL=http://localhost:4001` — 本機 Hub（區網開頁會自動改同 IP）；正式站用 `.env` 的 `https://api.yenshow.com`
 - `VITE_LINE_OA_ID` — 官方帳號 Basic ID（不含 `@`），供「詢問業務」開啟 LINE 對話並預填訊息
 
 正式／`liff.yenshow.com` 仍走真實 LIFF Login，不要設 skip。
@@ -32,7 +32,13 @@ npm install
 npm run dev
 ```
 
-開啟 `http://localhost:5174/`（勿用 LINE 登入）。綁定 mock：`PO26002116`／`03028349`。
+| 場景 | 開啟網址 | API |
+|------|----------|-----|
+| 本機 | `http://localhost:5174/` | `localhost:4001` |
+| 區網 | `http://<這台IP>:5174/` | 自動改 `<同IP>:4001`（server `CORS_ORIGIN` 需含該來源） |
+| 公網 | `https://liff.yenshow.com`（build 部署） | `https://api.yenshow.com` |
+
+本機／區網勿用 LINE 登入。綁定 mock：`PO26002116`／`03028349`。
 
 ## 功能與 API
 
