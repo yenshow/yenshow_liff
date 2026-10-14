@@ -7,7 +7,7 @@ import { useLiff } from "@/composables/useLiff";
 import { localizedText, mediaUrl, productSpecDocuments } from "@/utils/format";
 
 const route = useRoute();
-const { openDocument, askSalesViaLine } = useLiff();
+const { openExternal, askSalesViaLine } = useLiff();
 
 const product = ref(null);
 const loading = ref(false);
@@ -42,7 +42,7 @@ const handleOpenSpec = async (documentUrl) => {
 	}
 	try {
 		const url = await buildPublicDocumentUrl({ productId, documentUrl });
-		openDocument(url);
+		openExternal(url);
 	} catch (err) {
 		error.value = err?.response?.data?.message || err?.message || "無法開啟規格書";
 	}

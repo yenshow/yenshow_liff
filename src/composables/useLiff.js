@@ -90,29 +90,33 @@ export const useLiff = () => {
 		}
 	};
 
+	/**
+	 * 開啟外部網址（規格書 PDF 等）。
+	 * LINE 內必須 external: true（跨 API 網域）；window.open 失敗時改用 <a> 備援。
+	 */
 	const openExternal = (url) => {
 		const href = String(url || "");
 		if (!href) return;
-		if (liffModule?.isInClient?.()) {
-			liffModule.openWindow({ url: href, external: true });
-			return;
-		}
-		window.open(href, "_blank", "noopener,noreferrer");
-	};
 
-	/**
-	 * 開啟規格書／PDF。
-	 * 必須 external: true：PDF 在 API 網域（與 LIFF endpoint 不同），
-	 * LINE 內建瀏覽器無法可靠導向跨網域 /storage，會看起來像「沒跳轉」。
-	 */
-	const openDocument = (url) => {
-		const href = String(url || "");
-		if (!href) return;
 		if (liffModule?.isInClient?.()) {
-			liffModule.openWindow({ url: href, external: true });
-			return;
+			try {
+				liffModule.openWindow({ url: href, external: true });
+				return;
+			} catch {
+				// fall through
+			}
 		}
-		window.open(href, "_blank", "noopener,noreferrer");
+
+		const opened = window.open(href, "_blank", "noopener,noreferrer");
+		if (opened) return;
+
+		const anchor = document.createElement("a");
+		anchor.href = href;
+		anchor.target = "_blank";
+		anchor.rel = "noopener noreferrer";
+		document.body.appendChild(anchor);
+		anchor.click();
+		anchor.remove();
 	};
 
 	/**
@@ -150,5 +154,5 @@ export const useLiff = () => {
 		throw new Error("請從 LINE 官方帳號開啟此頁，或設定 VITE_LINE_OA_ID 後再試");
 	};
 
-	return { ensureInit, getProfile, getIdToken, openExternal, openDocument, askSalesViaLine };
+	return { ensureInit, getProfile, getIdToken, openExternal, askSalesViaLine };
 };
