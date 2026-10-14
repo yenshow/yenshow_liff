@@ -38,9 +38,16 @@ onMounted(() => {
 
 <template>
 	<div class="space-y-4">
-		<RouterLink to="/info" class="text-sm text-ys-mid" tabindex="0" aria-label="返回產品資訊">
-			← 返回
-		</RouterLink>
+		<div class="flex items-center gap-3">
+			<RouterLink
+				to="/info"
+				class="text-sm text-ys-mid"
+				tabindex="0"
+				aria-label="返回產品資訊"
+			>
+				← 返回
+			</RouterLink>
+		</div>
 
 		<p v-if="loading" class="text-sm text-ys-muted">載入中…</p>
 		<p v-if="error" class="text-sm text-red-600" role="alert">{{ error }}</p>
@@ -58,7 +65,7 @@ onMounted(() => {
 				<p class="whitespace-pre-wrap text-sm leading-relaxed text-ys-text">{{ bodyText }}</p>
 				<RouterLink
 					to="/products"
-					class="flex w-full items-center justify-center rounded-xl bg-ys-lime px-4 py-3 text-sm font-semibold text-ys-deep"
+					class="flex w-full items-center justify-center rounded-xl bg-ys-mid px-4 py-3 text-sm font-semibold text-white"
 					tabindex="0"
 					aria-label="前往規格查詢"
 				>

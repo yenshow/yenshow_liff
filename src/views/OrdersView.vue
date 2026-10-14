@@ -50,9 +50,7 @@ onMounted(() => {
 							{{ order.projectName || order.poNumber || order.id }}
 						</p>
 						<p class="mt-1 text-sm text-ys-muted">PO：{{ order.poNumber || "—" }}</p>
-						<p v-if="order.nextDeliveryDate" class="mt-1 text-xs text-ys-muted">
-							預計交貨：{{ order.nextDeliveryDate }}
-						</p>
+						<p v-if="order.nextDeliveryDate" class="mt-1 text-xs text-ys-muted">預計交貨：{{ order.nextDeliveryDate }}</p>
 						<div class="mt-2">
 							<StatusBadge :label="order.statusLabel || order.status" />
 						</div>

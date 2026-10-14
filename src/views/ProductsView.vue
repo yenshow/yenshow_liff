@@ -30,21 +30,21 @@ onMounted(() => {
 <template>
 	<div class="space-y-4">
 		<section>
-			<h1 class="sr-only">規格查詢</h1>
-			<p class="text-sm text-ys-muted">搜尋產品並下載規格書。</p>
+			<h1 class="text-xl font-semibold text-ys-deep">規格查詢</h1>
+			<p class="mt-1 text-sm text-ys-muted">以產品型號搜尋規格書與技術文件。</p>
 		</section>
 
 		<form class="flex w-full min-w-0 items-stretch gap-2" @submit.prevent="handleSearch">
 			<input
 				v-model="query"
 				type="search"
-				placeholder="例如 YS-AC-08"
+				placeholder="以型號搜尋，例如 YS-AC-08"
 				class="min-w-0 flex-1 rounded-xl border border-ys-line bg-white px-3 py-2.5"
 				aria-label="搜尋產品"
 			/>
 			<button
 				type="submit"
-				class="shrink-0 rounded-xl bg-ys-lime px-3 py-2.5 text-sm font-semibold text-ys-deep disabled:opacity-60 sm:px-4"
+				class="shrink-0 rounded-xl bg-ys-mid px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-60 sm:px-4"
 				:disabled="loading"
 				aria-label="搜尋"
 			>
@@ -64,7 +64,7 @@ onMounted(() => {
 		<EmptyState
 			v-else-if="!loading && !error"
 			title="沒有符合的產品"
-			description="試試遠岫型號或關鍵字，例如 YS-AC-08。"
+			description="請輸入產品型號，例如 YS-AC-08 或 2CD3746。"
 			action-label="重新搜尋"
 			@action="handleSearch"
 		/>

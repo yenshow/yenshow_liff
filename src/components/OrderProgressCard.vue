@@ -28,7 +28,7 @@ const progressLabel = computed(() => {
 <template>
 	<RouterLink
 		:to="`/orders/${encodeURIComponent(order.id)}`"
-		class="block rounded-2xl border border-ys-line bg-white p-4 shadow-sm transition hover:border-ys-mid"
+		class="block rounded-2xl border border-ys-line bg-ys-card p-4"
 		:aria-label="`查看訂單 ${title}`"
 	>
 		<div class="flex items-start justify-between gap-3">
@@ -39,10 +39,15 @@ const progressLabel = computed(() => {
 			<StatusBadge :label="order.statusLabel || order.status" />
 		</div>
 
-		<div v-if="totals" class="mt-3">
-			<div class="h-2 overflow-hidden rounded-full bg-ys-surface" role="progressbar" :aria-valuenow="totals.percent" aria-valuemin="0" aria-valuemax="100">
-				<div class="h-full rounded-full bg-ys-mid transition-all" :style="{ width: `${totals.percent}%` }" />
-			</div>
+		<div v-if="totals" class="mt-3 h-2 overflow-hidden rounded-full bg-ys-surface">
+			<div
+				class="h-full rounded-full bg-ys-mid"
+				role="progressbar"
+				:aria-valuenow="totals.percent"
+				aria-valuemin="0"
+				aria-valuemax="100"
+				:style="{ width: `${totals.percent}%` }"
+			/>
 		</div>
 
 		<p v-if="order.nextDeliveryDate" class="mt-3 text-xs text-ys-muted">

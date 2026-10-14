@@ -34,7 +34,7 @@ onMounted(() => {
 </script>
 
 <template>
-	<div class="relative space-y-4 pb-16">
+	<div class="space-y-4">
 		<section class="flex items-start justify-between gap-3">
 			<div>
 				<h1 class="text-xl font-semibold text-ys-deep">售後服務</h1>
@@ -42,7 +42,7 @@ onMounted(() => {
 			</div>
 			<button
 				type="button"
-				class="rounded-xl bg-ys-lime px-3 py-2 text-sm font-semibold text-ys-deep"
+				class="rounded-xl bg-ys-mid px-3 py-2 text-sm font-semibold text-white"
 				aria-label="新建案件"
 				tabindex="0"
 				@click="handleCreate"
@@ -81,15 +81,5 @@ onMounted(() => {
 			action-label="+ 建立案件"
 			@action="handleCreate"
 		/>
-
-		<button
-			type="button"
-			class="fixed bottom-6 right-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-ys-deep text-2xl text-white shadow-lg"
-			aria-label="建立售後案件"
-			tabindex="0"
-			@click="handleCreate"
-		>
-			+
-		</button>
 	</div>
 </template>

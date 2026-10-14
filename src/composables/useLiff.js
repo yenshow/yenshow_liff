@@ -1,6 +1,38 @@
 let initPromise = null;
 let liffModule = null;
 
+const mockLineUserId = () => String(import.meta.env.VITE_MOCK_LINE_USER_ID || "").trim();
+
+/** 本機開發：跳過 LINE OAuth（localhost 通常未登錄為 redirect URI） */
+const shouldSkipLiffLogin = () => {
+	if (import.meta.env.VITE_SKIP_LIFF_LOGIN === "true") return true;
+	if (mockLineUserId()) return true;
+	return false;
+};
+
+const lineOaBasicId = () => String(import.meta.env.VITE_LINE_OA_ID || "").trim().replace(/^@/, "");
+
+const createMockLiff = () => {
+	const userId = mockLineUserId() || "U_local_dev_user";
+	return {
+		isLoggedIn: () => true,
+		isInClient: () => false,
+		getIDToken: () => null,
+		getProfile: async () => ({
+			userId,
+			displayName: "本機開發使用者",
+			pictureUrl: ""
+		}),
+		openWindow: ({ url }) => {
+			window.open(url, "_blank", "noopener,noreferrer");
+		},
+		sendMessages: async () => {
+			throw new Error("本機環境無法傳送 LINE 訊息");
+		},
+		closeWindow: () => {}
+	};
+};
+
 const loadLiff = async () => {
 	if (liffModule) return liffModule;
 	const mod = await import("@line/liff");
@@ -12,6 +44,13 @@ export const useLiff = () => {
 	const ensureInit = async () => {
 		if (!initPromise) {
 			initPromise = (async () => {
+				if (shouldSkipLiffLogin()) {
+					const mock = createMockLiff();
+					liffModule = mock;
+					console.info("[LIFF] 已跳過 LINE 登入（本機 mock）", mockLineUserId() || "U_local_dev_user");
+					return mock;
+				}
+
 				const liff = await loadLiff();
 				const liffId = import.meta.env.VITE_LIFF_ID;
 				if (!liffId) throw new Error("尚未設定 VITE_LIFF_ID");
@@ -41,6 +80,7 @@ export const useLiff = () => {
 	};
 
 	const getIdToken = async () => {
+		if (shouldSkipLiffLogin()) return null;
 		const instance = await ensureInit();
 		if (!instance) return null;
 		try {
@@ -60,5 +100,40 @@ export const useLiff = () => {
 		window.open(href, "_blank", "noopener,noreferrer");
 	};
 
-	return { ensureInit, getProfile, getIdToken, openExternal };
+	/**
+	 * 詢問業務：優先在 LINE App 內傳訊息給 OA，再關閉 LIFF 回到聊天室；
+	 * 否則開啟 line.me 預填訊息（需設定 VITE_LINE_OA_ID）。
+	 */
+	const askSalesViaLine = async (text) => {
+		const message = String(text || "").trim();
+		if (!message) throw new Error("訊息內容為空");
+
+		await ensureInit();
+		const inClient = Boolean(liffModule?.isInClient?.());
+
+		if (inClient && typeof liffModule.sendMessages === "function") {
+			try {
+				await liffModule.sendMessages([{ type: "text", text: message }]);
+				liffModule.closeWindow?.();
+				return { method: "sendMessages" };
+			} catch {
+				// 非聊天室開啟、或未開 chat_message.write 時改走 OA 連結
+			}
+		}
+
+		const oaId = lineOaBasicId();
+		if (oaId) {
+			const url = `https://line.me/R/oaMessage/@${oaId}/?text=${encodeURIComponent(message)}`;
+			if (inClient) {
+				liffModule.openWindow({ url, external: false });
+			} else {
+				window.open(url, "_blank", "noopener,noreferrer");
+			}
+			return { method: "oaMessage" };
+		}
+
+		throw new Error("請從 LINE 官方帳號開啟此頁，或設定 VITE_LINE_OA_ID 後再試");
+	};
+
+	return { ensureInit, getProfile, getIdToken, openExternal, askSalesViaLine };
 };

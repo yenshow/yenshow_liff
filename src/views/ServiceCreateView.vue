@@ -48,9 +48,16 @@ onMounted(() => {
 
 <template>
 	<div class="space-y-4">
-		<RouterLink to="/service" class="text-sm text-ys-mid" tabindex="0" aria-label="返回售後列表">
-			← 返回
-		</RouterLink>
+		<div class="flex items-center gap-3">
+			<RouterLink
+				to="/service"
+				class="text-sm text-ys-mid"
+				tabindex="0"
+				aria-label="返回售後列表"
+			>
+				← 返回
+			</RouterLink>
+		</div>
 
 		<section>
 			<h1 class="text-xl font-semibold text-ys-deep">建立售後案件</h1>
@@ -120,7 +127,7 @@ onMounted(() => {
 
 			<button
 				type="submit"
-				class="w-full rounded-xl bg-ys-lime px-4 py-3 font-semibold text-ys-deep disabled:opacity-60"
+				class="w-full rounded-xl bg-ys-mid px-4 py-3 font-semibold text-white disabled:opacity-60"
 				:disabled="loading"
 				aria-label="送出案件"
 			>

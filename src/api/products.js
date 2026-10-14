@@ -2,7 +2,13 @@ import { publicHttp, apiBase, unwrapResult } from "./http";
 
 export const searchProducts = async (q) => {
 	const { data } = await publicHttp.get("/api/products/search", {
-		params: { keyword: q || undefined, limit: 20 }
+		params: {
+			keyword: q || undefined,
+			limit: 10,
+			searchBy: "code",
+			sort: "createdAt",
+			sortDirection: "desc"
+		}
 	});
 	const result = unwrapResult(data);
 	return result?.productsList || result?.products || [];

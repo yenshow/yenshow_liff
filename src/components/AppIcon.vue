@@ -24,28 +24,28 @@ defineProps({
 			<path d="M10 21v-6h4v6" />
 		</template>
 		<template v-else-if="name === 'product'">
-			<path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z" />
-			<path d="M12 12 20 7.5" />
-			<path d="M12 12v9" />
-			<path d="M12 12 4 7.5" />
+			<path d="M3.5 8.5 12 4l8.5 4.5v9L12 22l-8.5-4.5v-9Z" />
+			<path d="M12 12.5 20.5 8.5" />
+			<path d="M12 12.5V22" />
+			<path d="M12 12.5 3.5 8.5" />
 		</template>
+		<!-- 訂單：貨車（交貨追蹤） -->
 		<template v-else-if="name === 'orders'">
-			<path d="M7 4h10v16H7z" />
-			<path d="M10 8h4" />
-			<path d="M10 12h4" />
-			<path d="M10 16h2.5" />
+			<path d="M3 7h11v10H3V7Z" />
+			<path d="M14 10h4l3 3v4h-7v-7Z" />
+			<circle cx="7" cy="18.5" r="1.5" />
+			<circle cx="17.5" cy="18.5" r="1.5" />
 		</template>
 		<template v-else-if="name === 'support'">
-			<path d="M12 21a9 9 0 1 0-9-9c0 2.2.8 4.2 2.1 5.8L4 21l3.4-1.1A8.9 8.9 0 0 0 12 21Z" />
-			<path d="M9 11.5h.01" />
-			<path d="M12 11.5h.01" />
-			<path d="M15 11.5h.01" />
+			<path d="M4.5 12a7.5 7.5 0 0 1 15 0" />
+			<path d="M4.5 12v3.5a2 2 0 0 0 2 2H8v-7H6.5A2 2 0 0 0 4.5 12Z" />
+			<path d="M19.5 12v3.5a2 2 0 0 1-2 2H16v-7h1.5a2 2 0 0 1 2 2Z" />
+			<path d="M16 19.5c0 1.2-1.8 2-4 2" />
 		</template>
+		<!-- 規格：放大鏡（查詢） -->
 		<template v-else-if="name === 'specs'">
-			<path d="M7 3h7l3 3v15H7V3Z" />
-			<path d="M14 3v4h4" />
-			<path d="M10 12h4" />
-			<path d="M10 16h4" />
+			<circle cx="10.5" cy="10.5" r="6" />
+			<path d="M15 15l5 5" />
 		</template>
 		<template v-else-if="name === 'promo'">
 			<path d="M4 11v2a2 2 0 0 0 2 2h1l8 4V5L7 9H6a2 2 0 0 0-2 2Z" />
@@ -56,16 +56,15 @@ defineProps({
 			<path d="M14 3v4h4" />
 			<path d="M11 12h4" />
 			<path d="M11 16h4" />
-			<path d="M11 8h1" />
 		</template>
 		<template v-else-if="name === 'bell'">
-			<path d="M6 9a6 6 0 1 1 12 0c0 3.5 1.5 5 1.5 5H4.5S6 12.5 6 9Z" />
-			<path d="M10 19a2 2 0 0 0 4 0" />
+			<path d="M18 8A6 6 0 1 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+			<path d="M13.73 21a2 2 0 0 1-3.46 0" />
 		</template>
 		<template v-else-if="name === 'settings'">
 			<circle cx="12" cy="12" r="3" />
 			<path
-				d="M12 3.5v2M12 18.5v2M4.9 6.5l1.4 1.4M17.7 16.1l1.4 1.4M3.5 12h2M18.5 12h2M4.9 17.5l1.4-1.4M17.7 7.9l1.4-1.4"
+				d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"
 			/>
 		</template>
 		<template v-else-if="name === 'chevron'">

@@ -14,14 +14,17 @@ export const mediaUrl = (path) => {
 	return `${base}${raw.startsWith("/") ? raw : `/${raw}`}`;
 };
 
-export const productDocumentUrls = (product) => {
+/** 規格書按鈕：依語系標示，不暴露原檔名 */
+export const productSpecDocuments = (product) => {
 	if (!product) return [];
-	const byLang = [...(product.documentsByLang?.TW || []), ...(product.documentsByLang?.EN || [])];
-	const legacy = product.documents || [];
-	return [...new Set([...byLang, ...legacy].filter(Boolean))];
-};
+	const docs = [];
+	const tw = (product.documentsByLang?.TW || []).find(Boolean);
+	const en = (product.documentsByLang?.EN || []).find(Boolean);
+	if (tw) docs.push({ lang: "TW", label: "中文規格書", url: tw });
+	if (en) docs.push({ lang: "EN", label: "英文規格書", url: en });
+	if (docs.length) return docs;
 
-export const fileNameFromUrl = (documentUrl) => {
-	const parts = String(documentUrl).split("/");
-	return parts[parts.length - 1] || "規格書.pdf";
+	const legacy = (product.documents || []).filter(Boolean);
+	if (legacy[0]) docs.push({ lang: "LEGACY", label: "規格書", url: legacy[0] });
+	return docs;
 };

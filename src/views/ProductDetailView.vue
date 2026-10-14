@@ -4,21 +4,22 @@ import { useRoute } from "vue-router";
 import { buildPublicDocumentUrl, getProduct } from "@/api/products";
 import AppIcon from "@/components/AppIcon.vue";
 import { useLiff } from "@/composables/useLiff";
-import { fileNameFromUrl, localizedText, mediaUrl, productDocumentUrls } from "@/utils/format";
+import { localizedText, mediaUrl, productSpecDocuments } from "@/utils/format";
 
 const route = useRoute();
-const { openExternal } = useLiff();
+const { openExternal, askSalesViaLine } = useLiff();
 
 const product = ref(null);
 const loading = ref(false);
 const error = ref("");
 const downloadMessage = ref("");
+const salesMessage = ref("");
+const salesLoading = ref(false);
 
 const productName = computed(() => localizedText(product.value?.name, product.value?.code || ""));
-const documentUrls = computed(() => productDocumentUrls(product.value));
-const imageUrl = computed(() =>
-	mediaUrl(product.value?.image || product.value?.images?.[0] || product.value?.coverImage)
-);
+const description = computed(() => localizedText(product.value?.description, ""));
+const specDocuments = computed(() => productSpecDocuments(product.value));
+const imageUrl = computed(() => mediaUrl(product.value?.image || product.value?.images?.[0] || product.value?.coverImage));
 
 const handleLoad = async () => {
 	loading.value = true;
@@ -48,8 +49,25 @@ const handleDownload = async (documentUrl) => {
 	}
 };
 
-const handleAskSales = () => {
-	openExternal("https://www.yenshow.com");
+const handleAskSales = async () => {
+	if (!product.value) return;
+	salesMessage.value = "";
+	error.value = "";
+	salesLoading.value = true;
+	try {
+		const text = ["您好，想詢問以下產品規格／報價：", `型號：${product.value.code}`, productName.value ? `名稱：${productName.value}` : null]
+			.filter(Boolean)
+			.join("\n");
+
+		const result = await askSalesViaLine(text);
+		if (result.method === "oaMessage") {
+			salesMessage.value = "已開啟 LINE 對話，請直接傳送訊息給業務。";
+		}
+	} catch (err) {
+		error.value = err?.message || "無法開啟詢問業務";
+	} finally {
+		salesLoading.value = false;
+	}
 };
 
 onMounted(() => {
@@ -59,62 +77,71 @@ onMounted(() => {
 
 <template>
 	<div class="space-y-4">
-		<RouterLink to="/products" class="text-sm text-ys-mid" tabindex="0" aria-label="返回規格查詢">
-			← 返回
-		</RouterLink>
+		<div class="flex items-center gap-3">
+			<RouterLink
+				to="/products"
+				class="text-sm text-ys-mid"
+				tabindex="0"
+				aria-label="返回規格查詢"
+			>
+				← 返回
+			</RouterLink>
+		</div>
 
 		<p v-if="loading" class="text-sm text-ys-muted">載入中…</p>
 		<p v-if="error" class="text-sm text-red-600" role="alert">{{ error }}</p>
 		<p v-if="downloadMessage" class="text-sm text-emerald-700">{{ downloadMessage }}</p>
+		<p v-if="salesMessage" class="text-sm text-emerald-700">{{ salesMessage }}</p>
 
 		<template v-if="product">
-			<section class="overflow-hidden rounded-2xl border border-ys-line bg-white shadow-sm">
-				<div class="flex h-52 items-center justify-center bg-ys-surface">
-					<img
-						v-if="imageUrl"
-						:src="imageUrl"
-						:alt="productName"
-						class="h-full w-full object-cover"
-					/>
+			<section class="overflow-hidden rounded-2xl border border-ys-line bg-white">
+				<div class="flex aspect-4/3 items-center justify-center bg-ys-surface px-6 py-8">
+					<img v-if="imageUrl" :src="imageUrl" :alt="productName" class="max-h-full max-w-full object-contain" />
 					<span v-else class="text-sm text-ys-muted">尚無產品圖片</span>
 				</div>
-				<div class="space-y-2 p-4">
-					<p class="text-xs font-medium uppercase tracking-wide text-ys-mid">產品型號</p>
-					<h1 class="text-xl font-semibold text-ys-deep">{{ product.code }}</h1>
-					<p class="text-ys-muted">{{ productName }}</p>
-					<p v-if="product.oemModel || product.originalModel" class="text-sm text-ys-muted">
-						原廠型號：{{ product.oemModel || product.originalModel }}
-					</p>
+				<div class="space-y-2 border-t border-ys-line px-4 py-4">
+					<p class="text-xs font-medium tracking-wide text-ys-mid">產品型號</p>
+					<h1 class="break-all text-xl font-semibold leading-snug text-ys-deep">{{ product.code }}</h1>
+					<p class="text-sm leading-relaxed text-ys-muted">{{ productName }}</p>
+					<p v-if="product.oemModel || product.originalModel" class="text-sm text-ys-muted">原廠型號：{{ product.oemModel || product.originalModel }}</p>
+					<p v-if="description" class="pt-1 text-sm leading-relaxed text-ys-text">{{ description }}</p>
 				</div>
 			</section>
 
-			<section class="space-y-2">
-				<h2 class="text-base font-semibold text-ys-deep">規格文件</h2>
-				<button
-					v-for="doc in documentUrls"
-					:key="doc"
-					type="button"
-					class="flex w-full items-center justify-center gap-2 rounded-xl bg-ys-lime px-4 py-3 text-sm font-semibold text-ys-deep"
-					:aria-label="`下載 Datasheet ${fileNameFromUrl(doc)}`"
-					tabindex="0"
-					@click="handleDownload(doc)"
-				>
-					<AppIcon name="document" :size="18" />
-					<span>下載 Datasheet · {{ fileNameFromUrl(doc) }}</span>
-				</button>
-				<p v-if="!documentUrls.length" class="rounded-xl border border-dashed border-ys-line bg-white px-4 py-5 text-center text-sm text-ys-muted">
-					此產品尚無已上傳規格書
-				</p>
+			<section class="space-y-3" aria-labelledby="spec-docs-heading">
+				<h2 id="spec-docs-heading" class="text-base font-semibold text-ys-deep">規格文件</h2>
+				<div v-if="specDocuments.length" class="grid gap-2">
+					<button
+						v-for="doc in specDocuments"
+						:key="`${doc.lang}-${doc.url}`"
+						type="button"
+						class="flex w-full items-center justify-between gap-3 rounded-xl border border-ys-mid bg-white px-4 py-3.5 text-left"
+						:aria-label="`下載${doc.label}`"
+						tabindex="0"
+						@click="handleDownload(doc.url)"
+					>
+						<span class="inline-flex min-w-0 items-center gap-2.5 font-semibold text-ys-deep">
+							<span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-ys-lime text-ys-mid">
+								<AppIcon name="document" :size="18" />
+							</span>
+							<span>{{ doc.label }}</span>
+						</span>
+						<span class="shrink-0 text-sm font-medium text-ys-mid">下載 ›</span>
+					</button>
+				</div>
+				<p v-else class="rounded-xl border border-dashed border-ys-line bg-white px-4 py-5 text-center text-sm text-ys-muted">此產品尚無已上傳規格書</p>
 			</section>
 
 			<button
 				type="button"
-				class="w-full rounded-xl border border-ys-mid px-4 py-3 font-semibold text-ys-mid"
+				class="flex w-full items-center justify-center gap-2 rounded-xl bg-ys-mid px-4 py-3.5 font-semibold text-white disabled:opacity-60"
 				aria-label="詢問業務"
 				tabindex="0"
+				:disabled="salesLoading"
 				@click="handleAskSales"
 			>
-				詢問業務
+				<AppIcon name="support" :size="18" />
+				{{ salesLoading ? "開啟中…" : "詢問業務" }}
 			</button>
 		</template>
 	</div>

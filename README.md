@@ -7,18 +7,32 @@ LINE Mini App：訂單追蹤、規格查詢、產品資訊、售後服務。
 ```env
 VITE_LIFF_ID=2011932335-Da0jJcpe
 VITE_API_BASE_URL=https://api.yenshow.com
-# 本機若後端開啟 HUB_SKIP_LINE_VERIFY，可帶 mock user：
-# VITE_MOCK_LINE_USER_ID=U_local_dev_user
+VITE_LINE_OA_ID=your_oa_basic_id
 ```
+
+本機開發請用 [`.env.development`](.env.development)（`npm run dev` 自動載入）：
+
+- `VITE_SKIP_LIFF_LOGIN=true` — 不走 LINE OAuth（避免 localhost redirect 400）
+- `VITE_MOCK_LINE_USER_ID=U_local_dev_user` — 以 header 模擬 LINE 使用者
+- `VITE_API_BASE_URL=http://localhost:4001` — 打本機 Hub（勿打正式站跳過驗證）
+- `VITE_LINE_OA_ID` — 官方帳號 Basic ID（不含 `@`），供「詢問業務」開啟 LINE 對話並預填訊息
+
+正式／`liff.yenshow.com` 仍走真實 LIFF Login，不要設 skip。
+
+「詢問業務」優先在 LINE App 內 `sendMessages` 後關閉 LIFF 回到聊天室；若無法傳送則改開 `line.me` OA 對話（需 `VITE_LINE_OA_ID`）。LIFF 後台建議開啟 `chat_message.write` scope。
 
 ## 開發
 
 ```bash
+# 終端 1：YenShow server（需 HUB_SKIP_LINE_VERIFY=true、HUB_USE_MOCK=true）
+cd d:\web\yenshow\server && npm run dev
+
+# 終端 2：LIFF
 npm install
 npm run dev
 ```
 
-預設 `http://localhost:5174`（已列入後端 CORS）。
+開啟 `http://localhost:5174/`（勿用 LINE 登入）。綁定 mock：`PO26002116`／`03028349`。
 
 ## 功能與 API
 

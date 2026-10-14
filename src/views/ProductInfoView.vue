@@ -12,7 +12,18 @@ const handleLoad = async () => {
 	loading.value = true;
 	error.value = "";
 	try {
-		items.value = await listNews({ limit: 30 });
+		const list = await listNews({
+			limit: 10,
+			page: 1,
+			sort: "createdAt",
+			sortDirection: "desc"
+		});
+		// 確保前端顯示為最新在前（createdAt desc）
+		items.value = [...(list || [])].sort((a, b) => {
+			const ta = new Date(a?.createdAt || a?.publishDate || 0).getTime();
+			const tb = new Date(b?.createdAt || b?.publishDate || 0).getTime();
+			return tb - ta;
+		});
 	} catch (err) {
 		error.value = err?.response?.data?.message || err?.message || "無法載入產品資訊";
 		items.value = [];
@@ -29,8 +40,8 @@ onMounted(() => {
 <template>
 	<div class="space-y-4">
 		<section>
-			<h1 class="sr-only">產品資訊</h1>
-			<p class="text-sm text-ys-muted">最新消息、方案與活動。</p>
+			<h1 class="text-xl font-semibold text-ys-deep">產品推廣</h1>
+			<p class="mt-1 text-sm text-ys-muted">最新產品、方案與活動資訊。</p>
 		</section>
 
 		<p v-if="loading" class="text-sm text-ys-muted">載入中…</p>
@@ -40,7 +51,7 @@ onMounted(() => {
 			<li v-for="item in items" :key="item._id || item.slug">
 				<RouterLink
 					:to="`/info/${encodeURIComponent(item.slug)}`"
-					class="block overflow-hidden rounded-2xl border border-ys-line bg-white shadow-sm transition hover:border-ys-mid"
+					class="block overflow-hidden rounded-2xl border border-ys-line bg-ys-card"
 					tabindex="0"
 					:aria-label="localizedText(item.title, '未命名')"
 				>

@@ -82,7 +82,7 @@ const handleSubmit = async () => {
 			<p v-if="error" class="text-sm text-red-600" role="alert">{{ error }}</p>
 			<button
 				type="submit"
-				class="w-full rounded-xl bg-ys-lime px-4 py-3 font-semibold text-ys-deep disabled:opacity-60"
+				class="w-full rounded-xl bg-ys-mid px-4 py-3 font-semibold text-white disabled:opacity-60"
 				:disabled="loading"
 				aria-label="確認綁定"
 			>
