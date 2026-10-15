@@ -1,11 +1,14 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { buildPublicDocumentUrl } from "@/api/products";
+import { buildSignedDocumentUrl, getProduct } from "@/api/products";
+import { useLiff } from "@/composables/useLiff";
+import { productSpecDocuments } from "@/utils/format";
 
-/** LIFF 專屬開啟頁：fetch→blob，避免 API /storage 失敗時 302 到官網登入 */
+/** 以 productId+lang 取檔，避免中文路徑經 query 損壞 */
 const route = useRoute();
 const router = useRouter();
+const { ensureInit } = useLiff();
 
 const loading = ref(true);
 const error = ref("");
@@ -15,15 +18,23 @@ const handleOpen = async () => {
 	error.value = "";
 
 	const productId = String(route.query.productId || "").trim();
-	const documentUrl = String(route.query.documentUrl || "").trim();
-	if (!productId || !documentUrl) {
+	const lang = String(route.query.lang || "").trim();
+	if (!productId || !lang) {
 		loading.value = false;
 		error.value = "缺少規格書參數";
 		return;
 	}
 
 	try {
-		const signedUrl = await buildPublicDocumentUrl({ productId, documentUrl });
+		const liff = await ensureInit();
+		// 尚未完成 LINE Login 時會導向授權頁，此輪先中止
+		if (!liff) return;
+
+		const product = await getProduct(productId);
+		const doc = productSpecDocuments(product).find((item) => item.lang === lang);
+		if (!doc?.url) throw new Error("找不到對應規格書");
+
+		const signedUrl = await buildSignedDocumentUrl({ productId, documentUrl: doc.url });
 		const res = await fetch(signedUrl, {
 			credentials: "omit",
 			redirect: "manual",
@@ -33,13 +44,19 @@ const handleOpen = async () => {
 			throw new Error("下載被重新導向，請重試");
 		}
 		if (!res.ok) {
-			throw new Error(res.status === 403 ? "下載憑證無效或已過期" : `無法下載規格書（${res.status}）`);
+			let message = "";
+			try {
+				message = (await res.json())?.message || "";
+			} catch {
+				/* ignore */
+			}
+			throw new Error(message || (res.status === 403 ? "下載憑證無效或已過期" : `無法下載規格書（${res.status}）`));
 		}
 
 		window.location.replace(URL.createObjectURL(await res.blob()));
 	} catch (err) {
 		loading.value = false;
-		error.value = err?.message || "無法開啟規格書";
+		error.value = err?.response?.data?.message || err?.message || "無法開啟規格書";
 	}
 };
 

@@ -47,7 +47,7 @@ npm run dev
 | 綁定（訂單＋統編） | `/bind` | `POST /api/hub/verify-order` |
 | 綁定狀態 | — | `GET /api/hub/me` |
 | 訂單 | `/orders` | `GET /api/hub/orders`、`/orders/:id` |
-| 規格 | `/products` | `GET /api/products/search`、`/products/:id`、`public-url` |
+| 規格 | `/products` | `GET /api/products/search`、`/products/:id`、`liff-presign`（需 LINE Login） |
 | 產品資訊 | `/info` | `GET /api/news`、`/news/:slug` |
 | 售後 | `/service` | `GET\|POST /api/hub/service-tickets` |
 
@@ -61,7 +61,7 @@ Hub 請求需帶 LINE `idToken`：`Authorization: Bearer <idToken>`。
 ## 用戶流程（簡述）
 
 1. 從 LINE Rich Menu／連結開啟 LIFF → LINE Login  
-2. 首頁四入口：規格／資訊可直接用；訂單／售後需綁定  
+2. 首頁四入口：資訊可直接瀏覽；規格需 LINE Login 後開啟；訂單／售後需綁定  
 3. 綁定：輸入訂單編號＋統編 → `POST /api/hub/verify-order`  
 4. 之後可看訂單、建售後；通知 deep link：`/orders/:id`、`/service/:id`
 

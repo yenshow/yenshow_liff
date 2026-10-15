@@ -34,16 +34,17 @@ const handleLoad = async () => {
 	}
 };
 
-const handleOpenSpec = (documentUrl) => {
+/** 只傳 productId + lang，避免中文路徑經 query 編碼損壞 */
+const handleOpenSpec = (doc) => {
 	error.value = "";
 	const productId = product.value?._id || product.value?.id;
-	if (!productId || !documentUrl) {
+	if (!productId || !doc?.lang) {
 		error.value = "無法開啟規格書";
 		return;
 	}
 	router.push({
 		name: "spec-document",
-		query: { productId: String(productId), documentUrl: String(documentUrl) }
+		query: { productId: String(productId), lang: doc.lang }
 	});
 };
 
@@ -115,7 +116,7 @@ onMounted(() => {
 						class="flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-ys-mid bg-white px-4 py-3.5 text-left"
 						:aria-label="`開啟${doc.label}`"
 						tabindex="0"
-						@click="handleOpenSpec(doc.url)"
+						@click="handleOpenSpec(doc)"
 					>
 						<span class="inline-flex min-w-0 items-center gap-2.5 font-semibold text-ys-deep">
 							<span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-ys-lime text-ys-mid">

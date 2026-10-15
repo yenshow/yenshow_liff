@@ -1,5 +1,5 @@
 import { cachedFetch } from "@/utils/apiCache";
-import { publicHttp, resolveApiUrl, unwrapResult } from "./http";
+import { hubHttp, publicHttp, resolveApiUrl, unwrapResult } from "./http";
 
 export const searchProducts = async (q) => {
 	const keyword = (q || "").trim();
@@ -28,38 +28,16 @@ export const getProduct = async (id) => {
 	return Array.isArray(product) ? product[0] : product;
 };
 
-const normalizeDocumentUrl = (documentUrl) => {
-	let url = String(documentUrl || "").trim();
-	for (let i = 0; i < 5; i++) {
-		try {
-			const next = decodeURIComponent(url.replace(/\+/g, "%20"));
-			if (next === url) break;
-			url = next;
-		} catch {
-			break;
-		}
-	}
-	if (/^https?:\/\//i.test(url)) {
-		try {
-			url = new URL(url).pathname;
-		} catch {
-			/* keep */
-		}
-	}
-	if (!url.startsWith("/")) url = `/${url}`;
-	return url;
-};
-
 const encodeStoragePath = (storagePath) =>
 	String(storagePath || "")
 		.split("/")
 		.map((segment) => encodeURIComponent(segment))
 		.join("/");
 
-/** 活躍產品免登入換證；僅供 LIFF 開啟頁使用 */
-export const buildPublicDocumentUrl = async ({ productId, documentUrl }) => {
-	const { data } = await publicHttp.get("/api/documents/specifications/public-url", {
-		params: { productId, documentUrl: normalizeDocumentUrl(documentUrl) }
+/** LINE idToken 換證；需已完成 LIFF Login（不需 CRM 綁定）。路徑正規化由 server toStoragePath 處理。 */
+export const buildSignedDocumentUrl = async ({ productId, documentUrl }) => {
+	const { data } = await hubHttp.get("/api/documents/specifications/liff-presign", {
+		params: { productId, documentUrl: String(documentUrl || "").trim() }
 	});
 	const { storagePath, token } = unwrapResult(data) || {};
 	if (!storagePath || !token) throw new Error("無法取得開啟連結");
