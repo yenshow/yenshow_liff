@@ -92,4 +92,3 @@ CRM 未就緒時可設 `HUB_USE_MOCK=true`。正式環境設定：
 - `LINE_LOGIN_CHANNEL_ID`（LIFF ID 前段）
 - `CRM_API_BASE_URL`、`CRM_API_TOKEN` 或 `CRM_API_KEY`
 - `HUB_USE_MOCK=false`
-- 事件推播：`POST /api/hub/events`（`x-api-key`）
