@@ -1,16 +1,13 @@
 ﻿<script setup>
 defineOptions({ name: "HomeView" });
 
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref } from "vue";
 import { getOrder, listOrders } from "@/api/hub";
 import { searchProducts } from "@/api/products";
 import AppIcon from "@/components/AppIcon.vue";
 import ListSkeleton from "@/components/ListSkeleton.vue";
 import OrderProgressCard from "@/components/OrderProgressCard.vue";
 import ProductTeaserCard from "@/components/ProductTeaserCard.vue";
-import { useAuth } from "@/composables/useAuth";
-
-const { booting, authError, boot, bound } = useAuth();
 
 const menuItems = [
 	{ to: "/orders", title: "訂單追蹤", desc: "查詢訂單與交貨進度", icon: "orders" },
@@ -19,7 +16,7 @@ const menuItems = [
 	{ to: "/products", title: "規格查詢", desc: "產品規格與技術文件", icon: "specs" }
 ];
 
-const ongoingOrder = ref(null);
+const ongoingOrders = ref([]);
 const ordersLoading = ref(false);
 const ordersError = ref("");
 
@@ -27,32 +24,28 @@ const recommended = ref([]);
 const productsLoading = ref(false);
 const productsError = ref("");
 
-const handleRetry = () => boot({ force: true });
-
-const handleLoadOngoingOrder = async () => {
-	if (!bound.value) {
-		ongoingOrder.value = null;
-		ordersLoading.value = false;
-		ordersError.value = "";
-		return;
-	}
-
-	if (!ongoingOrder.value) ordersLoading.value = true;
+const handleLoadOngoingOrders = async () => {
+	if (!ongoingOrders.value.length) ordersLoading.value = true;
 	ordersError.value = "";
 	try {
-		const data = await listOrders({ limit: 5 });
-		const first = data?.orders?.[0];
-		if (!first?.id) {
-			ongoingOrder.value = null;
+		const data = await listOrders({ limit: 3 });
+		const list = (data?.orders || []).slice(0, 3);
+		if (!list.length) {
+			ongoingOrders.value = [];
 			return;
 		}
-		ongoingOrder.value = first;
-		try {
-			const detail = await getOrder(first.id);
-			if (detail) ongoingOrder.value = detail;
-		} catch {
-			/* 維持列表摘要 */
-		}
+
+		ongoingOrders.value = list;
+		ongoingOrders.value = await Promise.all(
+			list.map(async (order) => {
+				if (!order?.id) return order;
+				try {
+					return (await getOrder(order.id)) || order;
+				} catch {
+					return order;
+				}
+			})
+		);
 	} catch (err) {
 		ordersError.value = err?.response?.data?.message || err?.message || "無法載入訂單";
 	} finally {
@@ -73,28 +66,14 @@ const handleLoadRecommended = async () => {
 	}
 };
 
-watch(bound, handleLoadOngoingOrder, { immediate: true });
-onMounted(handleLoadRecommended);
+onMounted(() => {
+	handleLoadOngoingOrders();
+	handleLoadRecommended();
+});
 </script>
 
 <template>
 	<div>
-		<div
-			v-if="authError"
-			class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
-			role="alert"
-		>
-			{{ authError }}
-			<button
-				type="button"
-				class="mt-3 block w-full rounded-xl bg-red-600 px-3 py-2 text-white"
-				aria-label="重試"
-				@click="handleRetry"
-			>
-				重試
-			</button>
-		</div>
-
 		<nav class="mb-6 grid grid-cols-2 gap-3" aria-label="功能選單">
 			<RouterLink
 				v-for="item in menuItems"
@@ -116,24 +95,18 @@ onMounted(handleLoadRecommended);
 		<section class="mb-6" aria-labelledby="ongoing-orders-heading">
 			<div class="mb-3 flex items-center justify-between gap-2">
 				<h2 id="ongoing-orders-heading" class="text-base font-semibold text-ys-deep">進行中的訂單</h2>
-				<RouterLink v-if="bound" to="/orders" class="text-sm font-medium text-ys-mid" aria-label="查看全部訂單">
+				<RouterLink to="/orders" class="text-sm font-medium text-ys-mid" aria-label="查看全部訂單">
 					查看全部 ›
 				</RouterLink>
 			</div>
 
-			<p
-				v-if="booting && !bound"
-				class="rounded-2xl border border-ys-line bg-ys-card p-4 text-sm text-ys-muted"
-				role="status"
-			>
-				正在連線 LINE…
-			</p>
-			<p v-else-if="!bound" class="rounded-2xl border border-ys-line bg-ys-card p-4 text-sm text-ys-muted">
-				綁定帳號後即可查看交貨進度。
-			</p>
-			<ListSkeleton v-else-if="ordersLoading" :count="1" />
+			<ListSkeleton v-if="ordersLoading" :count="3" variant="row" />
 			<p v-else-if="ordersError" class="text-sm text-red-600" role="alert">{{ ordersError }}</p>
-			<OrderProgressCard v-else-if="ongoingOrder" :order="ongoingOrder" />
+			<ul v-else-if="ongoingOrders.length" class="space-y-3" aria-label="進行中的訂單">
+				<li v-for="order in ongoingOrders" :key="order.id">
+					<OrderProgressCard :order="order" />
+				</li>
+			</ul>
 			<p
 				v-else
 				class="rounded-2xl border border-dashed border-ys-line bg-ys-card px-4 py-6 text-center text-sm text-ys-muted"

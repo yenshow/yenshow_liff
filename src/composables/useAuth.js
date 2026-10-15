@@ -3,7 +3,6 @@ import { getHubMe, verifyOrderBind } from "@/api/hub";
 import { useLiff } from "@/composables/useLiff";
 import { cacheInvalidate } from "@/utils/apiCache";
 
-const booting = ref(true);
 const booted = ref(false);
 const bound = ref(false);
 const customer = ref(null);
@@ -42,7 +41,6 @@ export const useAuth = () => {
 		if (force) cacheInvalidate("hub:me");
 
 		bootPromise = (async () => {
-			booting.value = true;
 			authError.value = "";
 			try {
 				const instance = await ensureInit();
@@ -62,7 +60,6 @@ export const useAuth = () => {
 				booted.value = false;
 				throw err;
 			} finally {
-				booting.value = false;
 				bootPromise = null;
 			}
 		})();
@@ -77,15 +74,12 @@ export const useAuth = () => {
 	};
 
 	return {
-		booting,
 		booted,
 		bound,
-		customer,
 		companyName,
 		lineProfile,
 		authError,
 		boot,
-		refreshMe,
 		bindWithOrder
 	};
 };

@@ -5,12 +5,14 @@ import { useAuth } from "@/composables/useAuth";
 
 const route = useRoute();
 const router = useRouter();
-const { bindWithOrder, bound, companyName } = useAuth();
+const { bindWithOrder, authError, boot } = useAuth();
 
 const orderNo = ref("");
 const taxId = ref("");
 const loading = ref(false);
 const error = ref("");
+
+const handleRetry = () => boot({ force: true });
 
 const handleSubmit = async () => {
 	loading.value = true;
@@ -20,8 +22,11 @@ const handleSubmit = async () => {
 			orderNo: orderNo.value.trim(),
 			taxId: taxId.value.trim()
 		});
-		const redirect = typeof route.query.redirect === "string" ? route.query.redirect : "/";
-		await router.replace(redirect || "/");
+		const redirect =
+			typeof route.query.redirect === "string" && route.query.redirect.startsWith("/")
+				? route.query.redirect
+				: "/";
+		await router.replace(redirect.startsWith("//") || redirect.startsWith("/bind") ? "/" : redirect);
 	} catch (err) {
 		const status = err?.response?.status;
 		const apiMessage = err?.response?.data?.message || err?.message;
@@ -41,15 +46,24 @@ const handleSubmit = async () => {
 		<section>
 			<h1 class="text-xl font-semibold text-ys-deep">帳號綁定</h1>
 			<p class="mt-1 text-sm text-ys-muted">
-				請輸入貴公司訂單編號與統一編號，完成 LINE 與客戶資料對應。
+				請輸入貴公司訂單編號與統一編號，完成 LINE 與客戶資料對應後即可使用服務。
 			</p>
 		</section>
 
 		<div
-			v-if="bound"
-			class="rounded-xl border border-ys-line bg-white p-4 text-sm text-ys-mid"
+			v-if="authError"
+			class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+			role="alert"
 		>
-			目前已綁定：{{ companyName || "客戶" }}。若需更換，請重新驗證後覆蓋。
+			{{ authError }}
+			<button
+				type="button"
+				class="mt-3 block w-full rounded-xl bg-red-600 px-3 py-2 text-white"
+				aria-label="重試"
+				@click="handleRetry"
+			>
+				重試
+			</button>
 		</div>
 
 		<form
@@ -89,7 +103,5 @@ const handleSubmit = async () => {
 				{{ loading ? "驗證中…" : "確認綁定" }}
 			</button>
 		</form>
-
-		<p class="text-xs text-ys-muted">測試樣本（mock）：PO26002116 ／ 03028349</p>
 	</div>
 </template>

@@ -10,17 +10,22 @@ const router = createRouter({
 			meta: { title: "我的遠岫", keepAlive: true },
 			component: () => import("@/views/HomeView.vue")
 		},
-		{ path: "/bind", name: "bind", meta: { title: "帳號綁定" }, component: () => import("@/views/BindAccountView.vue") },
+		{
+			path: "/bind",
+			name: "bind",
+			meta: { title: "帳號綁定" },
+			component: () => import("@/views/BindAccountView.vue")
+		},
 		{
 			path: "/orders",
 			name: "orders",
-			meta: { title: "訂單追蹤", requiresBind: true, keepAlive: true },
+			meta: { title: "訂單追蹤", keepAlive: true },
 			component: () => import("@/views/OrdersView.vue")
 		},
 		{
 			path: "/orders/:id",
 			name: "order-detail",
-			meta: { title: "訂單詳情", requiresBind: true },
+			meta: { title: "訂單詳情" },
 			component: () => import("@/views/OrderDetailView.vue")
 		},
 		{
@@ -56,19 +61,19 @@ const router = createRouter({
 		{
 			path: "/service",
 			name: "service",
-			meta: { title: "售後服務", requiresBind: true, keepAlive: true },
+			meta: { title: "售後服務", keepAlive: true },
 			component: () => import("@/views/ServiceListView.vue")
 		},
 		{
 			path: "/service/new",
 			name: "service-new",
-			meta: { title: "建立案件", requiresBind: true },
+			meta: { title: "建立案件" },
 			component: () => import("@/views/ServiceCreateView.vue")
 		},
 		{
 			path: "/service/:id",
 			name: "service-detail",
-			meta: { title: "案件詳情", requiresBind: true },
+			meta: { title: "案件詳情" },
 			component: () => import("@/views/ServiceDetailView.vue")
 		},
 		{ path: "/:pathMatch(.*)*", redirect: "/" }
@@ -80,19 +85,33 @@ const router = createRouter({
 	}
 });
 
+const resolveSafeRedirect = (value) => {
+	if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return "/";
+	if (value.startsWith("/bind")) return "/";
+	return value;
+};
+
 router.beforeEach(async (to) => {
 	const auth = useAuth();
 	if (!auth.booted.value) {
 		try {
 			await auth.boot();
 		} catch {
-			// 交由頁面顯示 authError
+			// 交由綁定頁顯示 authError
 		}
 	}
 
-	if (to.meta.requiresBind && !auth.bound.value) {
-		return { name: "bind", query: { redirect: to.fullPath } };
+	if (!auth.bound.value) {
+		if (to.name === "bind") return true;
+		const redirect = to.fullPath === "/" ? undefined : to.fullPath;
+		return redirect ? { name: "bind", query: { redirect } } : { name: "bind" };
 	}
+
+	// 已綁定不需停留綁定頁
+	if (to.name === "bind") {
+		return resolveSafeRedirect(to.query.redirect);
+	}
+
 	return true;
 });
 

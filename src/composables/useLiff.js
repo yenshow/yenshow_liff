@@ -12,6 +12,11 @@ const shouldSkipLiffLogin = () => {
 
 const lineOaBasicId = () => String(import.meta.env.VITE_LINE_OA_ID || "").trim().replace(/^@/, "");
 
+const trimSlash = (value) => String(value || "").replace(/\/+$/, "");
+
+const officialSiteBase = () =>
+	trimSlash(import.meta.env.VITE_OFFICIAL_SITE_URL || "https://www.yenshow.com");
+
 const createMockLiff = () => {
 	const userId = mockLineUserId() || "U_local_dev_user";
 	return {
@@ -125,5 +130,22 @@ export const useLiff = () => {
 		throw new Error("請從 LINE 官方帳號開啟此頁，或設定 VITE_LINE_OA_ID 後再試");
 	};
 
-	return { ensureInit, getProfile, getIdToken, askSalesViaLine };
+	/** 開啟官網最新消息全文（LINE Client 用 external 瀏覽器） */
+	const openOfficialNews = async (slug) => {
+		const cleanSlug = String(slug || "")
+			.trim()
+			.toLowerCase();
+		if (!cleanSlug) throw new Error("消息 slug 為空");
+
+		const url = `${officialSiteBase()}/news/${encodeURIComponent(cleanSlug)}`;
+		await ensureInit();
+
+		if (liffModule?.isInClient?.() && typeof liffModule.openWindow === "function") {
+			liffModule.openWindow({ url, external: true });
+			return;
+		}
+		window.open(url, "_blank", "noopener,noreferrer");
+	};
+
+	return { ensureInit, getProfile, getIdToken, askSalesViaLine, openOfficialNews };
 };

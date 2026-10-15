@@ -23,13 +23,6 @@ defineProps({
 			<path d="M5 9.5V21h14V9.5" />
 			<path d="M10 21v-6h4v6" />
 		</template>
-		<template v-else-if="name === 'product'">
-			<path d="M3.5 8.5 12 4l8.5 4.5v9L12 22l-8.5-4.5v-9Z" />
-			<path d="M12 12.5 20.5 8.5" />
-			<path d="M12 12.5V22" />
-			<path d="M12 12.5 3.5 8.5" />
-		</template>
-		<!-- 訂單：貨車（交貨追蹤） -->
 		<template v-else-if="name === 'orders'">
 			<path d="M3 7h11v10H3V7Z" />
 			<path d="M14 10h4l3 3v4h-7v-7Z" />
@@ -42,7 +35,6 @@ defineProps({
 			<path d="M19.5 12v3.5a2 2 0 0 1-2 2H16v-7h1.5a2 2 0 0 1 2 2Z" />
 			<path d="M16 19.5c0 1.2-1.8 2-4 2" />
 		</template>
-		<!-- 規格：放大鏡（查詢） -->
 		<template v-else-if="name === 'specs'">
 			<circle cx="10.5" cy="10.5" r="6" />
 			<path d="M15 15l5 5" />
@@ -56,19 +48,6 @@ defineProps({
 			<path d="M14 3v4h4" />
 			<path d="M11 12h4" />
 			<path d="M11 16h4" />
-		</template>
-		<template v-else-if="name === 'bell'">
-			<path d="M18 8A6 6 0 1 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-			<path d="M13.73 21a2 2 0 0 1-3.46 0" />
-		</template>
-		<template v-else-if="name === 'settings'">
-			<circle cx="12" cy="12" r="3" />
-			<path
-				d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"
-			/>
-		</template>
-		<template v-else-if="name === 'chevron'">
-			<path d="M9 6l6 6-6 6" />
 		</template>
 	</svg>
 </template>
