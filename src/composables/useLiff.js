@@ -153,7 +153,7 @@ export const useLiff = () => {
 		throw new Error("請從 LINE 官方帳號開啟此頁，或設定 VITE_LINE_OA_ID 後再試");
 	};
 
-	/** LINE 內用系統瀏覽器開 HTTPS；其他環境開新分頁。勿傳 blob: */
+	/** LINE 內用系統瀏覽器開 HTTPS；其他環境開新分頁 */
 	const openExternalUrl = async (url) => {
 		const target = String(url || "").trim();
 		if (!/^https?:\/\//i.test(target)) throw new Error("網址無效");
@@ -176,5 +176,5 @@ export const useLiff = () => {
 		await openExternalUrl(`${officialSiteBase()}/news/${encodeURIComponent(cleanSlug)}`);
 	};
 
-	return { ensureInit, getProfile, getIdToken, askSalesViaLine, openOfficialNews, openExternalUrl };
+	return { ensureInit, getProfile, getIdToken, askSalesViaLine, openOfficialNews };
 };

@@ -7,7 +7,7 @@ const props = defineProps({
 });
 
 const title = computed(
-	() => props.order?.projectName || props.order?.poNumber || props.order?.id || "訂單"
+	() => props.order?.projectName || props.order?.id || "訂單"
 );
 
 const totals = computed(() => {

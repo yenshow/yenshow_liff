@@ -43,13 +43,12 @@ onMounted(handleLoad);
 					:to="`/orders/${encodeURIComponent(order.id)}`"
 					class="flex items-center justify-between rounded-2xl border border-ys-line bg-white p-4 shadow-sm"
 					tabindex="0"
-					:aria-label="`查看訂單 ${order.projectName || order.poNumber}`"
+					:aria-label="`查看訂單 ${order.projectName || order.id}`"
 				>
 					<div class="min-w-0 flex-1 pr-3">
 						<p class="truncate font-semibold text-ys-deep">
-							{{ order.projectName || order.poNumber || order.id }}
+							{{ order.projectName || order.id }}
 						</p>
-						<p class="mt-1 text-sm text-ys-muted">PO：{{ order.poNumber || "—" }}</p>
 						<p v-if="order.nextDeliveryDate" class="mt-1 text-xs text-ys-muted">預計交貨：{{ order.nextDeliveryDate }}</p>
 						<div class="mt-2">
 							<StatusBadge :label="order.statusLabel || order.status" />

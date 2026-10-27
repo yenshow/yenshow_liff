@@ -98,7 +98,7 @@ onMounted(() => {
 				>
 					<option value="">不指定</option>
 					<option v-for="order in orders" :key="order.id" :value="order.id">
-						{{ order.projectName || order.poNumber || order.id }}
+						{{ order.projectName || order.id }}
 					</option>
 				</select>
 			</label>

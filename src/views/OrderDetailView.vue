@@ -9,7 +9,7 @@ const order = ref(null);
 const loading = ref(false);
 const error = ref("");
 
-const title = computed(() => order.value?.projectName || order.value?.poNumber || "訂單詳情");
+const title = computed(() => order.value?.projectName || "訂單詳情");
 
 const handleLoad = async () => {
 	loading.value = true;
@@ -48,7 +48,6 @@ onMounted(() => {
 		<template v-if="order">
 			<section class="rounded-2xl border border-ys-line bg-white p-4 shadow-sm">
 				<h1 class="text-xl font-semibold text-ys-deep">{{ title }}</h1>
-				<p class="mt-1 text-sm text-ys-muted">PO：{{ order.poNumber || "—" }}</p>
 				<div class="mt-3">
 					<StatusBadge :label="order.statusLabel || order.status" />
 				</div>
