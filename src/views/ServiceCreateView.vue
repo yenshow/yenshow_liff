@@ -2,6 +2,7 @@
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { createServiceTicket, listOrders } from "@/api/hub";
+import { orderTitle } from "@/utils/format";
 
 const router = useRouter();
 const title = ref("");
@@ -98,7 +99,7 @@ onMounted(() => {
 				>
 					<option value="">不指定</option>
 					<option v-for="order in orders" :key="order.id" :value="order.id">
-						{{ order.projectName || order.id }}
+						{{ orderTitle(order) }}
 					</option>
 				</select>
 			</label>

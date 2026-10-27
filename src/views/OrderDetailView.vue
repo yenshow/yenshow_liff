@@ -3,13 +3,19 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { getOrder } from "@/api/hub";
 import StatusBadge from "@/components/StatusBadge.vue";
+import { orderTitle } from "@/utils/format";
 
 const route = useRoute();
 const order = ref(null);
 const loading = ref(false);
 const error = ref("");
 
-const title = computed(() => order.value?.projectName || "訂單詳情");
+const title = computed(() => orderTitle(order.value, "訂單詳情"));
+const isConfirmed = computed(() => {
+	const label = String(order.value?.statusLabel || "");
+	const status = String(order.value?.status || "").toLowerCase();
+	return label === "已確認" || status === "confirmed";
+});
 
 const handleLoad = async () => {
 	loading.value = true;
@@ -51,6 +57,9 @@ onMounted(() => {
 				<div class="mt-3">
 					<StatusBadge :label="order.statusLabel || order.status" />
 				</div>
+				<p v-if="isConfirmed" class="mt-2 text-xs text-ys-muted">
+					已確認代表訂單已成立，不代表已出貨。
+				</p>
 				<p v-if="order.nextDeliveryDate" class="mt-3 text-sm">
 					下一批預計交貨：
 					<span class="font-medium">{{ order.nextDeliveryDate }}</span>

@@ -6,6 +6,7 @@ import { listOrders } from "@/api/hub";
 import EmptyState from "@/components/EmptyState.vue";
 import ListSkeleton from "@/components/ListSkeleton.vue";
 import StatusBadge from "@/components/StatusBadge.vue";
+import { orderTitle } from "@/utils/format";
 
 const orders = ref([]);
 const loading = ref(false);
@@ -31,7 +32,9 @@ onMounted(handleLoad);
 	<div class="space-y-4">
 		<section>
 			<h1 class="text-xl font-semibold text-ys-deep">訂單追蹤</h1>
-			<p class="mt-1 text-sm text-ys-muted">查看與您相關的訂單與交貨進度。</p>
+			<p class="mt-1 text-sm text-ys-muted">
+				「已確認」代表訂單已成立，不代表已出貨。交貨請看出貨進度；資料約每 30 秒更新。
+			</p>
 		</section>
 
 		<ListSkeleton v-if="loading" :count="4" variant="row" />
@@ -43,11 +46,11 @@ onMounted(handleLoad);
 					:to="`/orders/${encodeURIComponent(order.id)}`"
 					class="flex items-center justify-between rounded-2xl border border-ys-line bg-white p-4 shadow-sm"
 					tabindex="0"
-					:aria-label="`查看訂單 ${order.projectName || order.id}`"
+					:aria-label="`查看訂單 ${orderTitle(order)}`"
 				>
 					<div class="min-w-0 flex-1 pr-3">
 						<p class="truncate font-semibold text-ys-deep">
-							{{ order.projectName || order.id }}
+							{{ orderTitle(order) }}
 						</p>
 						<p v-if="order.nextDeliveryDate" class="mt-1 text-xs text-ys-muted">預計交貨：{{ order.nextDeliveryDate }}</p>
 						<div class="mt-2">

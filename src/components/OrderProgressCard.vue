@@ -1,14 +1,13 @@
 <script setup>
 import { computed } from "vue";
 import StatusBadge from "@/components/StatusBadge.vue";
+import { orderTitle } from "@/utils/format";
 
 const props = defineProps({
 	order: { type: Object, required: true }
 });
 
-const title = computed(
-	() => props.order?.projectName || props.order?.id || "訂單"
-);
+const title = computed(() => orderTitle(props.order, "訂單"));
 
 const totals = computed(() => {
 	const items = props.order?.items || [];

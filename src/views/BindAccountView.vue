@@ -42,7 +42,9 @@ const handleSubmit = async () => {
 	<div class="space-y-4">
 		<section>
 			<h1 class="text-xl font-semibold text-ys-deep">帳號綁定</h1>
-			<p class="mt-1 text-sm text-ys-muted">請輸入貴公司訂單編號與統一編號，完成 LINE 與客戶資料對應後即可使用服務。</p>
+			<p class="mt-1 text-sm text-ys-muted">
+				請輸入完整內部訂單編號（例如 ORD-2026-0130）與 8 位統一編號。完整 PO 請整段貼上；合併清單中的單一 PO 無法查詢。
+			</p>
 		</section>
 
 		<div v-if="authError" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
@@ -57,7 +59,7 @@ const handleSubmit = async () => {
 					v-model="orderNo"
 					type="text"
 					required
-					placeholder="例如 ORD-XXXX-XXXX"
+					placeholder="例如 ORD-2026-0130"
 					class="w-full rounded-xl border border-ys-line px-3 py-2.5"
 					aria-label="訂單編號"
 				/>

@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+/docs
 
 # Env（Vercel 用 Dashboard 設定 VITE_*，勿提交）
 .env
