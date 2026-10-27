@@ -1,13 +1,39 @@
 let initPromise = null;
 let liffModule = null;
+let reloginStarted = false;
+
+const TOKEN_EXPIRY_SKEW_MS = 30 * 1000;
 
 const mockLineUserId = () => String(import.meta.env.VITE_MOCK_LINE_USER_ID || "").trim();
 
 /** 本機開發：跳過 LINE OAuth（localhost 通常未登錄為 redirect URI） */
-const shouldSkipLiffLogin = () => {
-	if (import.meta.env.VITE_SKIP_LIFF_LOGIN === "true") return true;
-	if (mockLineUserId()) return true;
-	return false;
+const shouldSkipLiffLogin = () =>
+	import.meta.env.VITE_SKIP_LIFF_LOGIN === "true" || Boolean(mockLineUserId());
+
+const isLiffTokenExpired = (liff) => {
+	const decoded = liff.getDecodedIDToken?.();
+	if (!decoded?.exp) return true;
+	return Number(decoded.exp) * 1000 <= Date.now() + TOKEN_EXPIRY_SKEW_MS;
+};
+
+const reloginForFreshToken = (liff) => {
+	if (reloginStarted || typeof liff?.login !== "function") return;
+	reloginStarted = true;
+	try {
+		if (liff.isLoggedIn?.()) liff.logout();
+	} catch {
+		// 過期 session 仍導向重新登入
+	}
+	liff.login({ redirectUri: window.location.href });
+};
+
+const requireFreshIdToken = (liff) => {
+	const token = liff.getIDToken?.() || "";
+	if (!token || isLiffTokenExpired(liff)) {
+		reloginForFreshToken(liff);
+		return null;
+	}
+	return token;
 };
 
 const lineOaBasicId = () => String(import.meta.env.VITE_LINE_OA_ID || "").trim().replace(/^@/, "");
@@ -65,6 +91,7 @@ export const useLiff = () => {
 					liff.login({ redirectUri: window.location.href });
 					return null;
 				}
+				if (!requireFreshIdToken(liff)) return null;
 				return liff;
 			})().catch((err) => {
 				initPromise = null;
@@ -88,11 +115,7 @@ export const useLiff = () => {
 		if (shouldSkipLiffLogin()) return null;
 		const instance = await ensureInit();
 		if (!instance) return null;
-		try {
-			return instance.getIDToken?.() || null;
-		} catch {
-			return null;
-		}
+		return requireFreshIdToken(instance);
 	};
 
 	/**
