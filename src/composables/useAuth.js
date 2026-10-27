@@ -1,5 +1,5 @@
 import { computed, ref } from "vue";
-import { getHubMe, verifyOrderBind } from "@/api/hub";
+import { getHubMe, unbindCompany as unbindCompanyRequest, verifyOrderBind } from "@/api/hub";
 import { useLiff } from "@/composables/useLiff";
 import { cacheInvalidate } from "@/utils/apiCache";
 
@@ -73,6 +73,12 @@ export const useAuth = () => {
 		return result;
 	};
 
+	const unbindCompany = async () => {
+		const result = await unbindCompanyRequest();
+		applyMe({ bound: false, customer: null });
+		return result;
+	};
+
 	return {
 		booted,
 		bound,
@@ -80,6 +86,7 @@ export const useAuth = () => {
 		lineProfile,
 		authError,
 		boot,
-		bindWithOrder
+		bindWithOrder,
+		unbindCompany
 	};
 };

@@ -39,7 +39,7 @@ VITE_LINE_OA_ID=your_oa_basic_id
 ## 開發
 
 ```bash
-# 終端 1：YenShow server（需 HUB_SKIP_LINE_VERIFY=true、HUB_USE_MOCK=true）
+# 終端 1：YenShow server（本機需 HUB_SKIP_LINE_VERIFY=true）
 cd d:\web\yenshow\server && npm run dev
 
 # 終端 2：LIFF
@@ -53,7 +53,7 @@ npm run dev
 | 區網 | `http://<這台IP>:5174/` | 自動改 `<同IP>:4001`（server `CORS_ORIGIN` 需含該來源） |
 | 公網 | `https://liff.yenshow.com`（build 部署） | `https://api.yenshow.com` |
 
-本機／區網勿用 LINE 登入。綁定 mock：`PO26002116`／`03028349`。
+本機／區網勿用 LINE 登入（`VITE_SKIP_LIFF_LOGIN` + `VITE_MOCK_LINE_USER_ID`，後端須 `HUB_SKIP_LINE_VERIFY=true`）。綁定請用真實 CRM 訂單編號與統編。
 
 ## 功能與 API
 
@@ -66,12 +66,7 @@ npm run dev
 | 產品資訊 | `/info` | `GET /api/news`、`/news/:slug` |
 | 售後 | `/service` | `GET\|POST /api/hub/service-tickets` |
 
-Hub 請求需帶 LINE `idToken`：`Authorization: Bearer <idToken>`。
-
-### Mock 綁定測試（後端 `HUB_USE_MOCK=true`）
-
-- 訂單編號：`PO26002116`
-- 統編：`03028349`
+Hub 請求需帶 LINE `idToken`：`Authorization: Bearer <idToken>`。本機略過 LIFF 時改送 `X-Line-User-Id`。
 
 ## 用戶流程（簡述）
 
@@ -86,9 +81,11 @@ Hub 請求需帶 LINE `idToken`：`Authorization: Bearer <idToken>`。
 
 ## 後端對接
 
-YenShow Server（`d:\web\yenshow\server`）需提供 `/api/hub/*`，並依 `docs/crm-agent-api.md` 轉打 CRM。  
-CRM 未就緒時可設 `HUB_USE_MOCK=true`。正式環境設定：
+YenShow Server（`d:\web\yenshow\server`）提供 `/api/hub/*`，以服務 Token 轉打 CRM（無需 Binding JWT）。
+
+正式環境：
 
 - `LINE_LOGIN_CHANNEL_ID`（LIFF ID 前段）
-- `CRM_API_BASE_URL`、`CRM_API_TOKEN` 或 `CRM_API_KEY`
-- `HUB_USE_MOCK=false`
+- `CRM_API_BASE_URL`、`CRM_API_TOKEN`、`CRM_CA_FILE`（內網自簽 CA）
+
+本機開發另需 `HUB_SKIP_LINE_VERIFY=true`（略過 LINE verify，接受 `X-Line-User-Id`）。正式／Docker 必須為 `false`。

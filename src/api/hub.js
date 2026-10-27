@@ -13,6 +13,12 @@ export const verifyOrderBind = async ({ orderNo, taxId }) => {
 	return unwrapResult(data);
 };
 
+export const unbindCompany = async () => {
+	const { data } = await hubHttp.delete("/api/hub/binding");
+	cacheInvalidate("hub:");
+	return unwrapResult(data);
+};
+
 export const listOrders = (params = {}) =>
 	cachedFetch(`hub:orders:${JSON.stringify(params)}`, async () => {
 		const { data } = await hubHttp.get("/api/hub/orders", { params });

@@ -22,10 +22,7 @@ const handleSubmit = async () => {
 			orderNo: orderNo.value.trim(),
 			taxId: taxId.value.trim()
 		});
-		const redirect =
-			typeof route.query.redirect === "string" && route.query.redirect.startsWith("/")
-				? route.query.redirect
-				: "/";
+		const redirect = typeof route.query.redirect === "string" && route.query.redirect.startsWith("/") ? route.query.redirect : "/";
 		await router.replace(redirect.startsWith("//") || redirect.startsWith("/bind") ? "/" : redirect);
 	} catch (err) {
 		const status = err?.response?.status;
@@ -45,38 +42,22 @@ const handleSubmit = async () => {
 	<div class="space-y-4">
 		<section>
 			<h1 class="text-xl font-semibold text-ys-deep">帳號綁定</h1>
-			<p class="mt-1 text-sm text-ys-muted">
-				請輸入貴公司訂單編號與統一編號，完成 LINE 與客戶資料對應後即可使用服務。
-			</p>
+			<p class="mt-1 text-sm text-ys-muted">請輸入貴公司訂單編號與統一編號，完成 LINE 與客戶資料對應後即可使用服務。</p>
 		</section>
 
-		<div
-			v-if="authError"
-			class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
-			role="alert"
-		>
+		<div v-if="authError" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
 			{{ authError }}
-			<button
-				type="button"
-				class="mt-3 block w-full rounded-xl bg-red-600 px-3 py-2 text-white"
-				aria-label="重試"
-				@click="handleRetry"
-			>
-				重試
-			</button>
+			<button type="button" class="mt-3 block w-full rounded-xl bg-red-600 px-3 py-2 text-white" aria-label="重試" @click="handleRetry">重試</button>
 		</div>
 
-		<form
-			class="space-y-3 rounded-2xl border border-ys-line bg-white p-4 shadow-sm"
-			@submit.prevent="handleSubmit"
-		>
+		<form class="space-y-3 rounded-2xl border border-ys-line bg-white p-4 shadow-sm" @submit.prevent="handleSubmit">
 			<label class="block">
 				<span class="mb-1 block text-sm font-medium">訂單編號</span>
 				<input
 					v-model="orderNo"
 					type="text"
 					required
-					placeholder="例如 PO26002116"
+					placeholder="例如 ORD-XXXX-XXXX"
 					class="w-full rounded-xl border border-ys-line px-3 py-2.5"
 					aria-label="訂單編號"
 				/>
@@ -88,7 +69,7 @@ const handleSubmit = async () => {
 					type="text"
 					required
 					inputmode="numeric"
-					placeholder="例如 03028349"
+					placeholder="例如 83124007"
 					class="w-full rounded-xl border border-ys-line px-3 py-2.5"
 					aria-label="統一編號"
 				/>

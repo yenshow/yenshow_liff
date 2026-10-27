@@ -1,192 +1,180 @@
-# CRM Agent：訂單正式串接執行單
+# YenShow → CRM Agent：訂單互聯一次交付
 
 **日期**：2026-10-15  
-**目標**：正式啟用 Customer Hub **訂單** API，供 YenShow Hub 轉打；LIFF 打開時可查列表／詳情（唯讀）。
-
-### 範圍
-
-| 等級 | 項目 | 說明 |
-|------|------|------|
-| **本單必做** | 公鑰、Token、allowlist、訂單投影、verify-order、orders list／detail | 客戶開／刷新 LIFF 即可拉訂單 |
-| **售後延後（本單不測）** | 報修 API、員工受理、工單同步 | 與訂單進度無關；另案再說 |
-| **正式棄用（請 CRM 移除／勿實作）** | **邀請碼綁定**、**Webhook／事件推播** | 見下方產品決議 |
-
-### 產品決議（2026-10-15）— 請 CRM Agent 執行移除
-
-1. **邀請碼**：正式棄用。綁定僅保留「訂單編號＋統編」。請自 Customer Hub 規格／程式／設定／文件中**移除**邀請碼、代表人邀請相關設計與 API，勿列 roadmap。  
-2. **Webhook／事件推播**：正式棄用。訂單更新靠用戶在 LINE LIFF **開啟或刷新頁面**向 Hub／CRM **拉資料**；CRM **勿**實作推播。YenShow Hub 已移除 `POST /api/hub/events`；CRM 側草案／P2 請取消並移除。
-
-JWT／公鑰見：`docs/crm-customer-hub/`（`ys-hub-202610-public.pem`、`jwt_claims.example.json`）。
+**對象**：CRM Agent（Customer Hub）  
+**讀完本檔即可開工；勿再追問、勿再開多輪確認。**  
+**完成定義**：交付下方回覆夾（含 Token 明文）後即結束你方工作；YenShow 用 LIFF 驗收，只回成功／失敗。
 
 ---
 
-## 1. 固定參數
+## 0. 一句話
 
-### 1.1 網路（請照完整位址設定）
-
-| 角色                          | 完整位址                                                   |
-| ----------------------------- | ---------------------------------------------------------- |
-| **CRM Customer Hub Base URL** | `https://192.168.1.11:9443/api/customer-hub/v1`            |
-| **連線（YenShow → CRM）**     | 來源 IP `192.168.1.24` → 目的 `192.168.1.11:9443`（HTTPS） |
-| **CRM allowlist**             | 允許 `192.168.1.24`（建議 `/32`）存取 `192.168.1.11:9443`  |
-
-> `192.168.1.24`＝YenShow Hub 所在 Linux VM 的**內網 IP**（呼叫端）。CRM 服務本體在 `192.168.1.11:9443`，兩者不要對調。
-
-### 1.2 身分與金鑰
-
-| 項          | 值                                                                                                               |
-| ----------- | ---------------------------------------------------------------------------------------------------------------- |
-| serviceId   | `yenshow-hub`                                                                                                    |
-| kid         | `ys-hub-202610`                                                                                                  |
-| 公鑰        | `ys-hub-202610-public.pem`（YenShow 交付；只要公鑰）                                                             |
-| 公鑰 SHA256 | `72507532A08A470EF78FDD31CDA80434AD7D5CBB2B921F696C80B395197445D1`                                               |
-| Binding JWT | RS256；header `X-Customer-Binding`；`iss=https://api.yenshow.com`；`aud=yenshow-crm-customer-hub`；`exp-iat≤300` |
-| 服務 Token  | `Authorization: Bearer …`（**CRM 簽發**；CRM 存 SHA256；明文交 YenShow）                                         |
+內網 Hub 用 **Bearer 服務 Token + IP allowlist** 打你方訂單三支 API；綁定只做「訂單＋統編」；**不要** Binding JWT、邀請碼、Webhook、probe、DPAPI。Token **明文寫進回覆檔**。
 
 ---
 
-## 2. CRM 必做清單（依序）
+## 1. 最終決策（已定案，勿再議）
 
-- [ ] **1. 公鑰**：核對 SHA256 → 載入（`kid=ys-hub-202610`）。勿用隔離測試鑰 `test-20261013`。
-- [ ] **2. 服務設定**：`services[].id=yenshow-hub`；聯測前可 `enabled=false`，僅允許 §1.1 allowlist。
-- [ ] **3. 訂單公開投影**：接**正式**排程／訂單事件。
-  - 發布：accepted＋有效核准＋非歷史補登
-  - 不發布：草稿／退回／來源錯誤
-  - 已公開後取消：保留取消狀態
-  - 無實體物流：`items: []`；未知交期：`nextDeliveryDate: null`；不偽造出貨量
-  - `shipments`：可先 `[]`（有正式 ship 再填）
-- [ ] **4. 掛三支訂單 API**（§3）；售後本階段不測、不挡啟用
-- [ ] **5. Allowlist**：依 §1.1（`192.168.1.24` → `192.168.1.11:9443`）
-- [ ] **6. 簽發正式服務 Token** → 安全管道交 YenShow → CRM 只留 SHA256／效期／撤銷
-- [ ] **7. 棄用清理**：移除／取消邀請碼綁定與 Webhook／事件推播（規格、程式、待辦、OpenAPI）；回報已清除項目清單
-- [ ] **8. 聯測** §4 → 通過後訂單 `enabled=true`
-- [ ] **9. 回報** §5 JSON
-
-**阻塞**：缺 PEM → 向 YenShow 索取（指紋須符合）；`192.168.1.24`→`192.168.1.11:9443` 不通 → 寫入 `blocked_on_yenshow`，勿虛構。
+| #   | 決策                | 說明                                                                              |
+| --- | ------------------- | --------------------------------------------------------------------------------- |
+| D1  | LIFF 不直連 CRM     | 僅 YenShow Hub（`192.168.1.24`）呼叫 CRM                                          |
+| D2  | LINE 綁定存 Hub     | CRM 不存 LINE user id；不需員工 API／Jerry Token                                  |
+| D3  | 綁定方式            | **僅** `orderNo` + `taxId`（8 位數字統編）                                        |
+| D4  | Hub→CRM 認證        | **僅** `Authorization: Bearer <服務 Token>` + 來源 IP allowlist                   |
+| D5  | Binding JWT         | **取消**。不要求 `X-Customer-Binding`、不驗 RS256／kid／公鑰                      |
+| D6  | 客戶範圍            | path 的 `{customerId}`；CRM 信任持 Token 的 Hub                                   |
+| D7  | 本階段範圍          | **僅訂單三支**；售後 API 契約可留、**本階段不聯測**                               |
+| D8  | 邀請碼／代表人綁定  | **正式棄用**，規格與程式移除                                                      |
+| D9  | Webhook／事件推播   | **正式棄用**；用戶靠 LIFF 刷新拉資料                                              |
+| D10 | Token 交付          | **明文寫入回覆檔** `hub.env`（內網交付）；不要 DPAPI、不要另開安全管道多輪        |
+| D11 | 驗收方式            | YenShow LIFF 綁定一筆真單；**不做** probe／聯測包／O-xx 表                        |
+| D12 | 舊公鑰交付          | `ys-hub-202610` 公鑰／JWT 文件 **作廢**，可忽略、勿再載入為必填                   |
+| D13 | joint-test／sandbox | **本次互聯測試才加入的臨時路徑 → 請移除**；驗收只打 `192.168.1.11:9443`＋金儀真單 |
 
 ---
 
-## 3. API 契約（Hub `crmClient.js`）
+## 2. 請你移除／停用（必做）
 
-Base＝`https://192.168.1.11:9443/api/customer-hub/v1`（無結尾 `/`）。
+請從 Customer Hub **規格、OpenAPI、程式、設定、文件** 一併拿掉或改為非必填：
 
-| Method | Path                                       | Auth                            |
-| ------ | ------------------------------------------ | ------------------------------- |
-| `POST` | `/customers/verify-order`                  | Bearer only（不要 Binding JWT） |
-| `GET`  | `/customers/{customerId}/orders`           | Bearer + `X-Customer-Binding`   |
-| `GET`  | `/customers/{customerId}/orders/{orderId}` | 同上                            |
+1. `X-Customer-Binding` **必填與驗簽**（RS256、kid、`ys-hub-202610` 公鑰、`serviceId` claim、opaque `sub`）
+   - 請求沒帶此 header：**不得 401／403**
+   - 若仍收到此 header：**可忽略**
+2. **邀請碼／代表人綁定** 全部路徑與文件
+3. **Webhook／事件推播／Hub events 訂閱**
+4. **測試用 Binding JWT env**（如 `CRM_TEST_BINDING_JWT`）及要求 YenShow 另簽測試 JWT
+5. **DPAPI／另開管道取 Token** 的流程說明（改為寫入 `hub.env`）
+6. **本次互聯才加入的 joint-test／sandbox 整條路徑**（見 §2.1）— **請移除**，勿再當閘門或交付物
 
-- `customerId`：字串，且＝JWT `customerId`＝path
-- Body：`{ "orderNo": "<string>", "taxId": "<8位數字>" }`
-- List query：`page`、`limit`、`status`（可選）
+### 2.1 joint-test／sandbox（本次測試臨時物 → 移除）
 
-### verify-order
+確認：joint-test 庫／sandbox（含 `127.0.0.1:8899`、`TEST-ONLY` Token、假 seed、`yenshow-test`、kid `test-20261013`、probe／聯測包／O-xx）是**這次 Customer Hub 互聯測試才加的**，不是長期正式架構。
 
-| 情況     | HTTP | 說明                                                                    |
-| -------- | ---- | ----------------------------------------------------------------------- |
-| 唯一命中 | 200  | `customer.id`（字串）、`companyName`、`taxId`、`code?`；含 `order` 摘要 |
-| 不符     | 404  |                                                                         |
-| 多筆     | 409  | 建議 `code: AMBIGUOUS_ORDER`                                            |
-| 過頻     | 429  |                                                                         |
+請 CRM **直接移除**與本互聯相關的：
 
-### 訂單欄位
+| 移除項目                                       | 說明                            |
+| ---------------------------------------------- | ------------------------------- |
+| joint-test／sandbox 閘門                       | 勿再要求先過聯測庫再接正式      |
+| `sandbox.py`／`8899` 交付路徑                  | 勿再寫進對 YenShow 的說明或回覆 |
+| `TEST-ONLY-*` Token、假統編／`TEST-PO-*`       | 勿當驗收資料                    |
+| `yenshow-test`、test kid、Binding JWT 測試流程 | 一併拿掉                        |
+| `probe.py`、network／orders 聯測包、O-01～O-12 | 勿再交付或要求 YenShow 重跑     |
 
-列表：`id`, `poNumber`, `projectName`, `status`, `statusLabel`, `nextDeliveryDate`（可 null）
+驗收只留：§3 Base URL＋服務 Token＋§4 金儀真單。
 
-詳情另加：
+---
 
-```json
-{
-	"items": [{ "sku": "", "name": "", "orderedQty": 0, "shippedQty": 0, "pendingQty": 0 }],
-	"shipments": [{ "shipmentNo": "", "shippedAt": null, "items": [{ "sku": "", "qty": 0 }] }]
-}
+## 3. 網路與端點（固定值）
+
+| 項目         | 值                                                                         |
+| ------------ | -------------------------------------------------------------------------- |
+| CRM Base URL | `https://192.168.1.11:9443/api/customer-hub/v1`                            |
+| 允許來源 IP  | `192.168.1.24`（YenShow Hub）                                              |
+| TLS          | 內網 HTTPS；YenShow 已備 CA（`crm-ca.pem`），你方無需再交公鑰給 Binding 用 |
+
+### 本階段必開三支（相對 Base URL）
+
+| 方法   | 路徑                                       | 用途                                                 |
+| ------ | ------------------------------------------ | ---------------------------------------------------- |
+| `POST` | `/customers/verify-order`                  | body：`{ "orderNo", "taxId" }` → 回 customer + order |
+| `GET`  | `/customers/{customerId}/orders`           | 訂單列表（可支援 page／limit／status）               |
+| `GET`  | `/customers/{customerId}/orders/{orderId}` | 訂單明細（含交貨／品項欄位依現有契約）               |
+
+認證：每個請求  
+`Authorization: Bearer <CRM_API_TOKEN>`  
+**不要**再要求第二組 header。
+
+上列三支須對 `192.168.1.24` 可打通，且能回 §4 金儀訂單（或你更新後的 `ACCEPT_*`）。
+
+---
+
+## 4. 驗收用訂單（固定；若變更請改 hub.env 的 ACCEPT\_\*）
+
+| 欄位               | 值               |
+| ------------------ | ---------------- |
+| 訂單編號 `orderNo` | `ORD-2026-0130`  |
+| 統編 `taxId`       | `03028349`       |
+| customerId         | `84`             |
+| orderId            | `130`            |
+| 客戶               | 金儀股份有限公司 |
+
+YenShow 流程：LIFF 輸入上列訂單＋統編 → Hub `verify-order` → 列表／明細可顯示即通過。
+
+---
+
+## 5. 你方唯一交付物
+
+### 路徑
+
+`Desktop/YenShow_CRM_訂單互聯_回覆/`
+
+（本機與 YenShow 同機桌面即可；或複製整個資料夾給 YenShow。）
+
+### 必寫檔：`hub.env`（請覆寫，勿留空 Token）
+
+```env
+CRM_API_BASE_URL=https://192.168.1.11:9443/api/customer-hub/v1
+CRM_API_TOKEN=<在此寫入正式服務 Token 明文，必填>
+CRM_TOKEN_EXPIRES_AT=<ISO8601 效期；若無固定效期可寫 never 或留空>
+ACCEPT_ORDER_NO=ORD-2026-0130
+ACCEPT_TAX_ID=03028349
+ACCEPT_CUSTOMER_ID=84
+ACCEPT_ORDER_ID=130
 ```
 
-`items`／`shipments` 可為 `[]`。勿回成本、毛利、銀行、員工、內部備註。
+### 規則
 
-### 憑證
+- `CRM_API_TOKEN` **必填明文**；寫完即完成交付
+- **勿**進 git、**勿**貼公開頻道／群組
+- **不要**附 probe 結果、長篇說明、多個 JSON、第二份密文檔
+- 可選：同資料夾放一行 `DONE.txt`，內容僅 `ready`（非必要）
 
-|      | 服務 Token | Binding JWT         |
-| ---- | ---------- | ------------------- |
-| 誰產 | CRM        | YenShow（每次現簽） |
-| CRM  | 存 SHA256  | 公鑰驗簽            |
-| 用途 | 服務身分   | 本次 `customerId`   |
-
----
-
-## 4. 驗收
-
-| ID   | 案例                | 預期                     |
-| ---- | ------------------- | ------------------------ |
-| O-01 | Token＋JWT 列客戶 A | 僅 A、已發布             |
-| O-02 | A 讀 B orderId      | 403／404                 |
-| O-03 | 錯 kid／過期 JWT    | 401／403                 |
-| O-04 | 有品項              | `items` qty 合理         |
-| O-05 | 純服務單            | `items: []`              |
-| O-06 | 未知交期            | `nextDeliveryDate: null` |
-| O-07 | 已公開後取消        | 可見取消態               |
-| O-08 | shipments           | 允許 `[]`（非挡門）      |
-| O-09 | verify 正確         | 200＋字串 `customer.id`  |
-| O-10 | 錯統編              | 404                      |
-| O-11 | 多筆                | 409                      |
-| O-12 | 草稿／未核准        | 不在列表                 |
-
-**通過**：O-01～O-07、O-09～O-12；YenShow 設定 `CRM_API_BASE_URL`、`CRM_API_TOKEN`、`HUB_USE_MOCK=false` 後 list／detail 可通。O-08 有出貨再補驗。
+YenShow 會把 Token 轉入 Hub env、重啟後用 LIFF 驗收。
 
 ---
 
-## 5. 完成時回報
+## 6. 明確不做／勿再問
 
-```json
-{
-	"as_of": "YYYY-MM-DD",
-	"base_url": "https://192.168.1.11:9443/api/customer-hub/v1",
-	"allowlist": {
-		"source_ip": "192.168.1.24",
-		"dest": "192.168.1.11:9443"
-	},
-	"production_router_installed": true,
-	"enabled": false,
-	"service_id": "yenshow-hub",
-	"kid": "ys-hub-202610",
-	"public_key_sha256_matched": true,
-	"token_issued_to_yenshow": true,
-	"projection_scheduler_connected": true,
-	"order_apis_ready": true,
-	"service_tickets_in_scope": false,
-	"orders_only_enablement_accepted": true,
-	"invite_code_removed": true,
-	"webhook_removed": true,
-	"removed_items": [],
-	"acceptance": { "passed": [], "failed": [], "skipped": ["O-08"] },
-	"known_limitations": [],
-	"blocked_on_yenshow": []
-}
-```
-
-聯測通過且雙方同意後再 `enabled=true`。
+| 主題                                    | 答案（已定）                                                                      |
+| --------------------------------------- | --------------------------------------------------------------------------------- |
+| 要不要永久 Token？                      | 長期服務 Token 即可；效期寫在 `CRM_TOKEN_EXPIRES_AT`；到期前再換並更新 `hub.env`  |
+| 還要 Binding JWT／公鑰嗎？              | **不要**                                                                          |
+| 還要邀請碼／Webhook 嗎？                | **不要**                                                                          |
+| 售後／員工受理這輪要做嗎？              | **不要**（另案）                                                                  |
+| 要 YenShow 跑 probe／聯測包嗎？         | **不要**（本次測試臨時物，請移除）                                                |
+| joint-test／sandbox 要留嗎？            | **不要**（本次才加 → 請移除；驗收只用 §3＋金儀）                                  |
+| Token 怎麼交？                          | **只寫** `hub.env`                                                                |
+| Base URL 要不要改成 api.yenshow／反代？ | **本階段維持** `192.168.1.11:9443`                                                |
+| 缺少欄位怎麼辦？                        | 用上表固定值；若單號失效，只改 `hub.env` 的 `ACCEPT_*` 並在回覆夾註一行列出新單號 |
 
 ---
 
-## 6. YenShow 配合（非本 Agent 實作）
+## 7. 完成檢查清單（你方自檢後交卷）
 
-| 項   | 內容                                                                                                    |
-| ---- | ------------------------------------------------------------------------------------------------------- |
-| 公鑰 | 交付 `ys-hub-202610-public.pem`（私鑰不交）                                                             |
-| 網路 | 確認 `192.168.1.24` 可 HTTPS 連 `192.168.1.11:9443`                                                     |
-| Env  | `CRM_API_BASE_URL=https://192.168.1.11:9443/api/customer-hub/v1`；`CRM_API_TOKEN`；`HUB_USE_MOCK=false` |
+- [ ] 三支訂單 API 對 `192.168.1.24` 可呼叫
+- [ ] 認證僅 Bearer Token＋IP；**無** Binding JWT 必填
+- [ ] 邀請碼、Webhook 已從對外規格／實作移除或停用
+- [ ] `hub.env` 已填 `CRM_API_TOKEN` 明文與 ACCEPT\_\*
+- [ ] 驗收單 `ORD-2026-0130`／`03028349` 仍有效（或已更新 ACCEPT\_\*）
+- [ ] joint-test／sandbox／probe／聯測包已從本互聯交付路徑移除
+- [ ] 未夾帶上述臨時測試物
+
+交卷後等 YenShow LIFF 結果即可；**不必**主動再開下一輪規格討論。
 
 ---
 
-## 7. 執行指令
+## 8. 給 CRM Agent 的執行指令（可整段貼上）
 
 ```
-執行本訂單正式串接執行單：
-1) 載入公鑰 kid=ys-hub-202610，SHA256=72507532A08A470EF78FDD31CDA80434AD7D5CBB2B921F696C80B395197445D1
-2) 服務 Base URL=https://192.168.1.11:9443/api/customer-hub/v1；allowlist 來源 192.168.1.24 → 目的 192.168.1.11:9443
-3) 掛 POST /customers/verify-order、GET /customers/{id}/orders、GET /customers/{id}/orders/{orderId}
-4) 訂單投影接正式事件；shipments 可 []；售後本單不測
-5) 正式棄用並移除：邀請碼綁定、Webhook／事件推播（用戶靠 LIFF 刷新拉單即可）
-6) 簽發服務 Token 交 YenShow（CRM 只存 SHA256）；跑 O-01～O-12（O-08 可 skip）；回報 §5 JSON（含 invite_code_removed、webhook_removed、removed_items）
-阻塞時填 blocked_on_yenshow，勿虛構憑證或網路。
+請完整閱讀並執行：
+Desktop/liff/docs/CRM_Agent_訂單功能正式串接執行單.md
+（或同內容：YenShow_CRM_訂單互聯_回覆/交付CRM_Agent.md）
+
+依該文件：
+1) 訂單三支 API：Bearer 服務 Token + IP allowlist（192.168.1.24）→ https://192.168.1.11:9443/api/customer-hub/v1
+2) 移除：X-Customer-Binding、邀請碼、Webhook
+3) 移除本次互聯才加的 joint-test／sandbox（8899、TEST Token、probe、聯測包、O-xx、yenshow-test）
+4) 覆寫 Desktop/YenShow_CRM_訂單互聯_回覆/hub.env，寫入 CRM_API_TOKEN 明文
+5) 驗收單 ORD-2026-0130 / 03028349；不要再追問
+完成後只交付該回覆資料夾。
 ```

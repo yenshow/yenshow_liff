@@ -8,14 +8,16 @@ import { productSpecDocuments } from "@/utils/format";
 /** 以 productId+lang 取檔，避免中文路徑經 query 損壞 */
 const route = useRoute();
 const router = useRouter();
-const { ensureInit } = useLiff();
+const { ensureInit, openExternalUrl } = useLiff();
 
 const loading = ref(true);
 const error = ref("");
+const opened = ref(false);
 
 const handleOpen = async () => {
 	loading.value = true;
 	error.value = "";
+	opened.value = false;
 
 	const productId = String(route.query.productId || "").trim();
 	const lang = String(route.query.lang || "").trim();
@@ -35,6 +37,15 @@ const handleOpen = async () => {
 		if (!doc?.url) throw new Error("找不到對應規格書");
 
 		const signedUrl = await buildSignedDocumentUrl({ productId, documentUrl: doc.url });
+
+		// LINE WebView 無法把 blob:/PDF 交給外部 App，會卡在「正在嘗試開啟外部應用程式」
+		if (liff.isInClient?.()) {
+			await openExternalUrl(signedUrl);
+			opened.value = true;
+			loading.value = false;
+			return;
+		}
+
 		const res = await fetch(signedUrl, {
 			credentials: "omit",
 			redirect: "manual",
@@ -84,6 +95,21 @@ onMounted(handleOpen);
 		</button>
 
 		<p v-if="loading" class="text-sm text-ys-muted" aria-live="polite">正在開啟規格書…</p>
+
+		<template v-else-if="opened">
+			<p class="text-sm text-emerald-700" aria-live="polite">
+				規格書已請系統瀏覽器開啟。若沒有看到檔案，請再按一次。
+			</p>
+			<button
+				type="button"
+				class="cursor-pointer rounded-xl bg-ys-mid px-4 py-2.5 text-sm font-semibold text-white"
+				aria-label="再次開啟規格書"
+				tabindex="0"
+				@click="handleOpen"
+			>
+				再次開啟
+			</button>
+		</template>
 
 		<template v-else>
 			<p class="text-sm text-red-600" role="alert">{{ error }}</p>
