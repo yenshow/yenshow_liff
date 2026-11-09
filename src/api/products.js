@@ -34,7 +34,7 @@ const encodeStoragePath = (storagePath) =>
 		.map((segment) => encodeURIComponent(segment))
 		.join("/");
 
-/** LINE idToken 換證；需已完成 LIFF Login（不需 CRM 綁定）。路徑正規化由 server toStoragePath 處理。 */
+/** LINE idToken 換證規格書下載網址。路徑正規化由 server toStoragePath 處理。 */
 export const buildSignedDocumentUrl = async ({ productId, documentUrl }) => {
 	const { data } = await hubHttp.get("/api/documents/specifications/liff-presign", {
 		params: { productId, documentUrl: String(documentUrl || "").trim() }

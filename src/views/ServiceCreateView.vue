@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { createServiceTicket, listOrders } from "@/api/hub";
@@ -11,15 +11,18 @@ const relatedOrderId = ref("");
 const contactName = ref("");
 const contactPhone = ref("");
 const orders = ref([]);
+const ordersHint = ref("");
 const loading = ref(false);
 const error = ref("");
 
 const handleLoadOrders = async () => {
+	ordersHint.value = "";
 	try {
 		const data = await listOrders({ limit: 50 });
 		orders.value = data?.orders || [];
 	} catch {
 		orders.value = [];
+		ordersHint.value = "關聯訂單清單暫時無法載入，仍可直接送出案件。";
 	}
 };
 
@@ -102,6 +105,7 @@ onMounted(() => {
 						{{ orderTitle(order) }}
 					</option>
 				</select>
+				<p v-if="ordersHint" class="mt-1 text-xs text-ys-muted" role="status">{{ ordersHint }}</p>
 			</label>
 
 			<label class="block">

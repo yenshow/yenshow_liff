@@ -1,7 +1,8 @@
-﻿<script setup>
+<script setup>
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuth } from "@/composables/useAuth";
+import { resolveSafeRedirect } from "@/utils/redirect";
 
 const route = useRoute();
 const router = useRouter();
@@ -22,8 +23,7 @@ const handleSubmit = async () => {
 			orderNo: orderNo.value.trim(),
 			taxId: taxId.value.trim()
 		});
-		const redirect = typeof route.query.redirect === "string" && route.query.redirect.startsWith("/") ? route.query.redirect : "/";
-		await router.replace(redirect.startsWith("//") || redirect.startsWith("/bind") ? "/" : redirect);
+		await router.replace(resolveSafeRedirect(route.query.redirect));
 	} catch (err) {
 		const status = err?.response?.status;
 		const apiMessage = err?.response?.data?.message || err?.message;
@@ -42,9 +42,7 @@ const handleSubmit = async () => {
 	<div class="space-y-4">
 		<section>
 			<h1 class="text-xl font-semibold text-ys-deep">帳號綁定</h1>
-			<p class="mt-1 text-sm text-ys-muted">
-				請輸入完整內部訂單編號（例如 ORD-2026-0130）與 8 位統一編號。完整 PO 請整段貼上；合併清單中的單一 PO 無法查詢。
-			</p>
+			<p class="mt-1 text-sm text-ys-muted">請輸入完整內部訂單編號（例如 ORD-2026-0130）與 8 位統一編號。完整 PO 請整段貼上；合併清單中的單一 PO 無法查詢。</p>
 		</section>
 
 		<div v-if="authError" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
@@ -71,7 +69,7 @@ const handleSubmit = async () => {
 					type="text"
 					required
 					inputmode="numeric"
-					placeholder="例如 83124007"
+					placeholder="例如 03028349"
 					class="w-full rounded-xl border border-ys-line px-3 py-2.5"
 					aria-label="統一編號"
 				/>

@@ -36,8 +36,6 @@ const requireFreshIdToken = (liff) => {
 	return token;
 };
 
-const lineOaBasicId = () => String(import.meta.env.VITE_LINE_OA_ID || "").trim().replace(/^@/, "");
-
 const trimSlash = (value) => String(value || "").replace(/\/+$/, "");
 
 const officialSiteBase = () =>
@@ -56,11 +54,7 @@ const createMockLiff = () => {
 		}),
 		openWindow: ({ url }) => {
 			window.open(url, "_blank", "noopener,noreferrer");
-		},
-		sendMessages: async () => {
-			throw new Error("本機環境無法傳送 LINE 訊息");
-		},
-		closeWindow: () => {}
+		}
 	};
 };
 
@@ -118,41 +112,6 @@ export const useLiff = () => {
 		return requireFreshIdToken(instance);
 	};
 
-	/**
-	 * 詢問業務：優先在 LINE App 內傳訊息給 OA，再關閉 LIFF 回到聊天室；
-	 * 否則開啟 line.me 預填訊息（需設定 VITE_LINE_OA_ID）。
-	 */
-	const askSalesViaLine = async (text) => {
-		const message = String(text || "").trim();
-		if (!message) throw new Error("訊息內容為空");
-
-		await ensureInit();
-		const inClient = Boolean(liffModule?.isInClient?.());
-
-		if (inClient && typeof liffModule.sendMessages === "function") {
-			try {
-				await liffModule.sendMessages([{ type: "text", text: message }]);
-				liffModule.closeWindow?.();
-				return { method: "sendMessages" };
-			} catch {
-				// 非聊天室開啟、或未開 chat_message.write 時改走 OA 連結
-			}
-		}
-
-		const oaId = lineOaBasicId();
-		if (oaId) {
-			const url = `https://line.me/R/oaMessage/@${oaId}/?text=${encodeURIComponent(message)}`;
-			if (inClient) {
-				liffModule.openWindow({ url, external: false });
-			} else {
-				window.open(url, "_blank", "noopener,noreferrer");
-			}
-			return { method: "oaMessage" };
-		}
-
-		throw new Error("請從 LINE 官方帳號開啟此頁，或設定 VITE_LINE_OA_ID 後再試");
-	};
-
 	/** LINE 內用系統瀏覽器開 HTTPS；其他環境開新分頁 */
 	const openExternalUrl = async (url) => {
 		const target = String(url || "").trim();
@@ -176,5 +135,5 @@ export const useLiff = () => {
 		await openExternalUrl(`${officialSiteBase()}/news/${encodeURIComponent(cleanSlug)}`);
 	};
 
-	return { ensureInit, getProfile, getIdToken, askSalesViaLine, openOfficialNews };
+	return { ensureInit, getProfile, getIdToken, openOfficialNews };
 };

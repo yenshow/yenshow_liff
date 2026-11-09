@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuth } from "@/composables/useAuth";
+import { resolveSafeRedirect } from "@/utils/redirect";
 
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
@@ -85,21 +86,18 @@ const router = createRouter({
 	}
 });
 
-const resolveSafeRedirect = (value) => {
-	if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return "/";
-	if (value.startsWith("/bind")) return "/";
-	return value;
-};
-
 router.beforeEach(async (to) => {
 	const auth = useAuth();
 	if (!auth.booted.value) {
 		try {
 			await auth.boot();
 		} catch {
-			// 交由綁定頁顯示 authError
+			// 交由綁定頁／App 顯示 authError
 		}
 	}
+
+	// Hub 暫時不可用：不強制導向綁定，由 App 顯示維護錯誤
+	if (auth.hubUnavailable.value) return true;
 
 	if (!auth.bound.value) {
 		if (to.name === "bind") return true;

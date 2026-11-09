@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import BottomTabBar from "@/components/BottomTabBar.vue";
+import EmptyState from "@/components/EmptyState.vue";
 import { useAuth } from "@/composables/useAuth";
 
 /** 與各 tab 根頁 defineOptions.name 對應 */
@@ -9,7 +10,7 @@ const TAB_KEEP_ALIVE = ["HomeView", "OrdersView", "ServiceListView", "ProductInf
 
 const route = useRoute();
 const router = useRouter();
-const { lineProfile, companyName, bound, unbindCompany } = useAuth();
+const { lineProfile, companyName, bound, hubUnavailable, hubError, boot, unbindCompany } = useAuth();
 
 const isHome = computed(() => route.name === "home");
 const displayName = computed(() => lineProfile.value?.displayName || "遠岫客戶");
@@ -18,6 +19,25 @@ const subtitle = computed(() => companyName.value || "已綁定客戶");
 const confirmUnbind = ref(false);
 const unbindLoading = ref(false);
 const unbindError = ref("");
+const hubRetryLoading = ref(false);
+
+const handleRetryHub = async () => {
+	if (hubRetryLoading.value) return;
+	hubRetryLoading.value = true;
+	try {
+		await boot({ force: true });
+		if (hubUnavailable.value) return;
+		if (!bound.value) {
+			await router.replace({ name: "bind" });
+			return;
+		}
+		if (route.name === "bind") {
+			await router.replace("/");
+		}
+	} finally {
+		hubRetryLoading.value = false;
+	}
+};
 
 const handleOpenUnbind = () => {
 	unbindError.value = "";
@@ -91,9 +111,17 @@ const handleConfirmUnbind = async () => {
 
 		<main
 			class="mx-auto w-full max-w-lg flex-1 rounded-t-3xl bg-ys-surface px-4 pt-6"
-			:class="bound ? 'pb-24' : 'pb-8'"
+			:class="bound && !hubUnavailable ? 'pb-24' : 'pb-8'"
 		>
-			<RouterView v-slot="{ Component, route: viewRoute }">
+			<div v-if="hubUnavailable" class="py-6">
+				<EmptyState
+					title="系統維護中"
+					:description="hubError || '服務暫時無法連線，請稍後再試。'"
+					:action-label="hubRetryLoading ? '重試中…' : '重新連線'"
+					@action="handleRetryHub"
+				/>
+			</div>
+			<RouterView v-else v-slot="{ Component, route: viewRoute }">
 				<Transition name="page-fade" mode="out-in">
 					<KeepAlive :include="TAB_KEEP_ALIVE">
 						<component
@@ -105,7 +133,7 @@ const handleConfirmUnbind = async () => {
 			</RouterView>
 		</main>
 
-		<BottomTabBar v-if="bound" />
+		<BottomTabBar v-if="bound && !hubUnavailable" />
 
 		<div
 			v-if="confirmUnbind"
@@ -122,7 +150,7 @@ const handleConfirmUnbind = async () => {
 			>
 				<h2 id="unbind-dialog-title" class="text-lg font-semibold text-ys-deep">解除公司綁定</h2>
 				<p class="mt-2 text-sm leading-relaxed text-ys-muted">
-					確定要解除「{{ subtitle }}」？解除後需重新輸入訂單編號與統編，才能查看訂單與售後服務。
+					確定要解除「{{ subtitle }}」？解除後需重新輸入訂單編號與統編，才能使用本服務。
 				</p>
 				<p v-if="unbindError" class="mt-3 text-sm text-red-600" role="alert">{{ unbindError }}</p>
 				<div class="mt-5 grid grid-cols-2 gap-2">

@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from "vue";
 import StatusBadge from "@/components/StatusBadge.vue";
-import { orderTitle } from "@/utils/format";
+import { isShipmentUnverified, orderTitle } from "@/utils/format";
 
 const props = defineProps({
 	order: { type: Object, required: true }
@@ -9,7 +9,10 @@ const props = defineProps({
 
 const title = computed(() => orderTitle(props.order, "訂單"));
 
+const shipmentUnverified = computed(() => isShipmentUnverified(props.order));
+
 const totals = computed(() => {
+	if (shipmentUnverified.value) return null;
 	const items = props.order?.items || [];
 	if (!items.length) return null;
 	const ordered = items.reduce((sum, item) => sum + (Number(item.orderedQty) || 0), 0);
@@ -19,6 +22,7 @@ const totals = computed(() => {
 });
 
 const progressLabel = computed(() => {
+	if (shipmentUnverified.value) return "出貨資料待核對";
 	if (!totals.value) return props.order?.statusLabel || props.order?.status || "進行中";
 	return `已出貨 ${totals.value.shipped}/${totals.value.ordered} 件`;
 });

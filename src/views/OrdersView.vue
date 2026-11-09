@@ -33,7 +33,7 @@ onMounted(handleLoad);
 		<section>
 			<h1 class="text-xl font-semibold text-ys-deep">訂單追蹤</h1>
 			<p class="mt-1 text-sm text-ys-muted">
-				「已確認」代表訂單已成立，不代表已出貨。交貨請看出貨進度；資料約每 30 秒更新。
+				沒有出貨紀錄不代表尚未出貨。資料待核對時不會顯示已交／待交，以免誤以為公司欠貨。
 			</p>
 		</section>
 

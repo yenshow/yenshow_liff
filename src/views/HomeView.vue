@@ -28,14 +28,12 @@ const handleLoadOngoingOrders = async () => {
 	if (!ongoingOrders.value.length) ordersLoading.value = true;
 	ordersError.value = "";
 	try {
-		const data = await listOrders({ limit: 3 });
-		const list = (data?.orders || []).slice(0, 3);
+		const list = (await listOrders({ limit: 3 }))?.orders || [];
 		if (!list.length) {
 			ongoingOrders.value = [];
 			return;
 		}
 
-		ongoingOrders.value = list;
 		ongoingOrders.value = await Promise.all(
 			list.map(async (order) => {
 				if (!order?.id) return order;

@@ -3,18 +3,14 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { getProduct } from "@/api/products";
 import AppIcon from "@/components/AppIcon.vue";
-import { useLiff } from "@/composables/useLiff";
 import { localizedText, mediaUrl, productSpecDocuments } from "@/utils/format";
 
 const route = useRoute();
 const router = useRouter();
-const { askSalesViaLine } = useLiff();
 
 const product = ref(null);
 const loading = ref(false);
 const error = ref("");
-const salesMessage = ref("");
-const salesLoading = ref(false);
 
 const productName = computed(() => localizedText(product.value?.name, product.value?.code || ""));
 const description = computed(() => localizedText(product.value?.description, ""));
@@ -48,27 +44,6 @@ const handleOpenSpec = (doc) => {
 	});
 };
 
-const handleAskSales = async () => {
-	if (!product.value) return;
-	salesMessage.value = "";
-	error.value = "";
-	salesLoading.value = true;
-	try {
-		const text = ["您好，想詢問以下產品規格／報價：", `型號：${product.value.code}`, productName.value ? `名稱：${productName.value}` : null]
-			.filter(Boolean)
-			.join("\n");
-
-		const result = await askSalesViaLine(text);
-		if (result.method === "oaMessage") {
-			salesMessage.value = "已開啟 LINE 對話，請直接傳送訊息給業務。";
-		}
-	} catch (err) {
-		error.value = err?.message || "無法開啟詢問業務";
-	} finally {
-		salesLoading.value = false;
-	}
-};
-
 onMounted(() => {
 	handleLoad();
 });
@@ -89,7 +64,6 @@ onMounted(() => {
 
 		<p v-if="loading" class="text-sm text-ys-muted">載入中…</p>
 		<p v-if="error" class="text-sm text-red-600" role="alert">{{ error }}</p>
-		<p v-if="salesMessage" class="text-sm text-emerald-700">{{ salesMessage }}</p>
 
 		<template v-if="product">
 			<section class="overflow-hidden rounded-2xl border border-ys-line bg-white">
@@ -129,18 +103,6 @@ onMounted(() => {
 				</div>
 				<p v-else class="rounded-xl border border-dashed border-ys-line bg-white px-4 py-5 text-center text-sm text-ys-muted">此產品尚無已上傳規格書</p>
 			</section>
-
-			<button
-				type="button"
-				class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-ys-mid px-4 py-3.5 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-				aria-label="詢問業務"
-				tabindex="0"
-				:disabled="salesLoading"
-				@click="handleAskSales"
-			>
-				<AppIcon name="support" :size="18" />
-				{{ salesLoading ? "開啟中…" : "詢問業務" }}
-			</button>
 		</template>
 	</div>
 </template>

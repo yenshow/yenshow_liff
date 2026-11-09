@@ -1,9 +1,9 @@
-﻿<script setup>
+<script setup>
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { getOrder } from "@/api/hub";
 import StatusBadge from "@/components/StatusBadge.vue";
-import { orderTitle } from "@/utils/format";
+import { isShipmentUnverified, orderTitle } from "@/utils/format";
 
 const route = useRoute();
 const order = ref(null);
@@ -16,6 +16,7 @@ const isConfirmed = computed(() => {
 	const status = String(order.value?.status || "").toLowerCase();
 	return label === "已確認" || status === "confirmed";
 });
+const shipmentUnverified = computed(() => isShipmentUnverified(order.value));
 
 const handleLoad = async () => {
 	loading.value = true;
@@ -57,7 +58,10 @@ onMounted(() => {
 				<div class="mt-3">
 					<StatusBadge :label="order.statusLabel || order.status" />
 				</div>
-				<p v-if="isConfirmed" class="mt-2 text-xs text-ys-muted">
+				<p v-if="shipmentUnverified" class="mt-2 text-xs text-ys-muted">
+					出貨資料待核對，不代表尚未出貨。已交／待交暫不顯示。
+				</p>
+				<p v-else-if="isConfirmed" class="mt-2 text-xs text-ys-muted">
 					已確認代表訂單已成立，不代表已出貨。
 				</p>
 				<p v-if="order.nextDeliveryDate" class="mt-3 text-sm">
@@ -83,11 +87,11 @@ onMounted(() => {
 							</div>
 							<div class="rounded-xl bg-ys-surface py-2">
 								<p class="text-xs text-ys-muted">已交</p>
-								<p class="font-semibold">{{ item.shippedQty }}</p>
+								<p class="font-semibold">{{ shipmentUnverified ? "—" : item.shippedQty }}</p>
 							</div>
 							<div class="rounded-xl bg-ys-lime/40 py-2">
 								<p class="text-xs text-ys-muted">待交</p>
-								<p class="font-semibold">{{ item.pendingQty }}</p>
+								<p class="font-semibold">{{ shipmentUnverified ? "—" : item.pendingQty }}</p>
 							</div>
 						</div>
 					</li>

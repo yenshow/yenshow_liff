@@ -25,6 +25,14 @@ export const orderTitle = (order, fallback = "訂單") => {
 	return fallback;
 };
 
+/** 無出貨紀錄且已交皆 0：資料可能不完整，不可當成尚未出貨。 */
+export const isShipmentUnverified = (order) => {
+	const items = order?.items || [];
+	if (!items.length) return false;
+	if (order?.shipments?.length) return false;
+	return items.every((item) => !Number(item.shippedQty));
+};
+
 export const localizedText = (value, fallback = "") => {
 	if (!value) return fallback;
 	if (typeof value === "string") return value;

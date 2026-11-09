@@ -12,12 +12,16 @@
 	--color-ys-line: #dde5e0;
 }
 
-html {
+html,
+body,
+#app {
 	scrollbar-width: none;
 	-ms-overflow-style: none;
 }
 
-html::-webkit-scrollbar {
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#app::-webkit-scrollbar {
 	display: none;
 }
 
@@ -27,23 +31,11 @@ body {
 	background: var(--color-ys-deep);
 	color: var(--color-ys-text);
 	font-family: "Noto Sans TC", "Segoe UI", sans-serif;
-	scrollbar-width: none;
-	-ms-overflow-style: none;
-}
-
-body::-webkit-scrollbar {
-	display: none;
 }
 
 #app {
 	min-height: 100vh;
 	overflow-x: hidden;
-	scrollbar-width: none;
-	-ms-overflow-style: none;
-}
-
-#app::-webkit-scrollbar {
-	display: none;
 }
 
 input[type="search"] {

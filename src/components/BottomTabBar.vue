@@ -1,39 +1,15 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed } from "vue";
 import { useRoute } from "vue-router";
 import AppIcon from "@/components/AppIcon.vue";
-import { listOrders } from "@/api/hub";
 
 const route = useRoute();
-const orderCount = ref(0);
-
-const handleLoadOrderCount = async () => {
-	try {
-		const data = await listOrders({ limit: 50 });
-		orderCount.value = (data?.orders || []).length;
-	} catch {
-		orderCount.value = 0;
-	}
-};
-
-onMounted(handleLoadOrderCount);
-
-const orderBadge = computed(() => {
-	if (orderCount.value <= 0) return "";
-	return orderCount.value > 99 ? "99+" : String(orderCount.value);
-});
 
 const tabs = computed(() => {
 	const path = route.path;
 	return [
 		{ to: "/", label: "首頁", icon: "home", active: path === "/" },
-		{
-			to: "/orders",
-			label: "訂單",
-			icon: "orders",
-			active: path.startsWith("/orders"),
-			badge: orderBadge.value
-		},
+		{ to: "/orders", label: "訂單", icon: "orders", active: path.startsWith("/orders") },
 		{ to: "/service", label: "支援", icon: "support", active: path.startsWith("/service") },
 		{ to: "/info", label: "產品", icon: "promo", active: path.startsWith("/info") },
 		{ to: "/products", label: "規格", icon: "specs", active: path.startsWith("/products") }
@@ -60,17 +36,10 @@ const tabs = computed(() => {
 						: 'font-medium text-ys-muted hover:bg-ys-surface hover:text-ys-text'
 				"
 				:aria-current="tab.active ? 'page' : undefined"
-				:aria-label="tab.badge ? `${tab.label}，${tab.badge} 筆` : tab.label"
+				:aria-label="tab.label"
 			>
 				<span class="relative inline-flex" :class="tab.active ? 'text-ys-mid' : undefined">
 					<AppIcon :name="tab.icon" :size="22" />
-					<span
-						v-if="tab.badge"
-						class="absolute -top-1.5 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-ys-mid px-1 text-[10px] leading-none font-bold text-white shadow-sm"
-						aria-hidden="true"
-					>
-						{{ tab.badge }}
-					</span>
 				</span>
 				<span>{{ tab.label }}</span>
 			</RouterLink>
